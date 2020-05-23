@@ -361,7 +361,13 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                                     const file = files[i];
                                     const name = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
                                     const text = (await file.text()).trim();
-                                    packs.push({ name, words: text.split('\n') });
+                                    const words = text.split('\n');
+
+                                    if (words.length < 25) {
+                                        continue;
+                                    }
+
+                                    packs.push({ name, words });
                                 }
 
                                 send.addPacks(packs);

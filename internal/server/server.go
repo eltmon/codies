@@ -397,6 +397,9 @@ func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) err
 			return err
 		}
 		for _, p := range params.Packs {
+			if len(p.Words) < 25 {
+				continue
+			}
 			r.room.AddPack(p.Name, p.Words)
 		}
 
