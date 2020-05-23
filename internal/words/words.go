@@ -22,26 +22,21 @@ func NewList(words []string) List {
 	for _, w := range words {
 		w = strings.TrimSpace(w)
 		w = strings.ToUpper(w)
-		if w != "" {
-			cleaned = append(cleaned, w)
-		}
+		cleaned = append(cleaned, w)
 	}
 	return newList(cleaned)
 }
 
 func NewListFromLines(s string) List {
+	s = strings.TrimSpace(s)
 	words := make([]string, 0, strings.Count(s, "\n"))
-
 	scanner := bufio.NewScanner(strings.NewReader(s))
 
 	for scanner.Scan() {
 		word := scanner.Text()
 		word = strings.TrimSpace(word)
 		word = strings.ToUpper(word)
-
-		if word != "" {
-			words = append(words, word)
-		}
+		words = append(words, word)
 	}
 
 	return newList(words)
