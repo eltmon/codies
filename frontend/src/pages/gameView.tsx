@@ -360,8 +360,10 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                                 for (let i = 0; i < files.length; i++) {
                                     const file = files[i];
                                     const name = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-                                    const text = (await file.text()).trim();
-                                    const words = text.split('\n');
+                                    const words = (await file.text())
+                                        .split('\n')
+                                        .map((word) => word.trim())
+                                        .filter((word) => word);
 
                                     if (words.length < 25) {
                                         continue;
@@ -370,7 +372,9 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                                     packs.push({ name, words });
                                 }
 
-                                send.addPacks(packs);
+                                if (packs.length) {
+                                    send.addPacks(packs);
+                                }
                             }}
                         />
                     </>
