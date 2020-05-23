@@ -12,7 +12,9 @@ RUN go mod download
 # Manually copying the required files to make this image's cache only include Go code.
 COPY ./main.go ./main.go
 COPY ./internal ./internal
-RUN go build .
+
+ARG version
+RUN go build  -ldflags="-X github.com/zikaeroh/codies/internal/version.version=${version}" .
 
 # TODO: Use distroless/static and statically compile above. (https://golang.org/issue/26492)
 FROM gcr.io/distroless/base:nonroot

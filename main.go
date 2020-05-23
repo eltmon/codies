@@ -18,6 +18,7 @@ import (
 	"github.com/tomwright/queryparam/v4"
 	"github.com/zikaeroh/codies/internal/protocol"
 	"github.com/zikaeroh/codies/internal/server"
+	"github.com/zikaeroh/codies/internal/version"
 	"golang.org/x/sync/errgroup"
 	"nhooyr.io/websocket"
 )
@@ -31,10 +32,15 @@ var args = struct {
 }
 
 func main() {
+	rand.Seed(time.Now().Unix())
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	if _, err := flags.Parse(&args); err != nil {
 		// Default flag parser prints messages, so just exit.
 		os.Exit(1)
 	}
+
+	log.Printf("starting codies server, version %s", version.Version())
 
 	wsOpts := &websocket.AcceptOptions{
 		OriginPatterns: args.Origins,
@@ -44,10 +50,6 @@ func main() {
 		log.Println("starting in debug mode, allowing any WebSocket origin host")
 		wsOpts.OriginPatterns = []string{"*"}
 	}
-
-	rand.Seed(time.Now().Unix())
-
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	g, ctx := errgroup.WithContext(ctxutil.Interrupt())
 
