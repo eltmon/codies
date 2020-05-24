@@ -9,6 +9,7 @@ import {
     Slider,
     Theme,
     Typography,
+    useTheme,
 } from '@material-ui/core';
 import { green, orange } from '@material-ui/core/colors';
 import { Add, ArrowBack, Delete, Link, Person, Search, Timer, TimerOff } from '@material-ui/icons';
@@ -242,6 +243,8 @@ const useSidebarStyles = makeStyles((_theme: Theme) =>
 
 const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
     const classes = useSidebarStyles();
+    const theme = useTheme();
+    const nameShade = theme.palette.type === 'dark' ? 400 : 600;
 
     const teams = state.teams;
     const lists = state.lists;
@@ -294,7 +297,7 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                                     style={{
                                         gridRow: j + 2,
                                         gridColumn: i + 1,
-                                        color: teamSpecs[i].hue[500],
+                                        color: teamSpecs[i].hue[nameShade],
                                         fontStyle: member.playerID === pState.playerID ? 'italic' : undefined,
                                     }}
                                 >
