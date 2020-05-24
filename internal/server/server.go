@@ -317,8 +317,9 @@ func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) err
 		if err := json.Unmarshal(note.Params, &params); err != nil {
 			return err
 		}
-		resetTimer = true
+		prevTurn := r.room.Turn
 		r.room.Reveal(playerID, params.Row, params.Col)
+		resetTimer = prevTurn != r.room.Turn
 
 	case protocol.NewGameMethod:
 		var params protocol.NewGameParams
