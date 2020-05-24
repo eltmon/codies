@@ -519,7 +519,8 @@ func (r *Room) createRoomState(spymaster bool) *protocol.State {
 					Bomb:    tile.Bomb,
 				}
 
-				if !tile.Revealed && room.Winner != nil && r.hideBomb {
+				if view.Bomb && !tile.Revealed && room.Winner == nil && r.hideBomb {
+					view.Neutral = true
 					view.Bomb = false
 				}
 
@@ -631,7 +632,7 @@ func (r *Room) changeHideBomb(HideBomb bool) {
 		return
 	}
 
-	r.hideBomb = true
+	r.hideBomb = HideBomb
 	r.room.Version++
 	r.sendAll()
 }
