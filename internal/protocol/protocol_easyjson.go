@@ -804,6 +804,8 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol7(in *jlexer.L
 				}
 				(*out.Timer).UnmarshalEasyJSON(in)
 			}
+		case "hideBomb":
+			out.HideBomb = bool(in.Bool())
 		default:
 			in.AddError(&jlexer.LexerError{
 				Offset: in.GetPos(),
@@ -947,6 +949,11 @@ func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol7(out *jwriter
 		} else {
 			(*in.Timer).MarshalEasyJSON(out)
 		}
+	}
+	{
+		const prefix string = ",\"hideBomb\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.HideBomb))
 	}
 	out.RawByte('}')
 }
@@ -2093,7 +2100,77 @@ func (v *ChangeNicknameParams) UnmarshalJSON(data []byte) error {
 func (v *ChangeNicknameParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol22(l, v)
 }
-func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(in *jlexer.Lexer, out *AddPacksParams) {
+func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(in *jlexer.Lexer, out *ChangeHideBombParams) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "hideBomb":
+			out.HideBomb = bool(in.Bool())
+		default:
+			in.AddError(&jlexer.LexerError{
+				Offset: in.GetPos(),
+				Reason: "unknown field",
+				Data:   key,
+			})
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(out *jwriter.Writer, in ChangeHideBombParams) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"hideBomb\":"
+		out.RawString(prefix[1:])
+		out.Bool(bool(in.HideBomb))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ChangeHideBombParams) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ChangeHideBombParams) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ChangeHideBombParams) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ChangeHideBombParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(l, v)
+}
+func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol24(in *jlexer.Lexer, out *AddPacksParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -2158,7 +2235,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(in *jlexer.
 		in.Consumed()
 	}
 }
-func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(out *jwriter.Writer, in AddPacksParams) {
+func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol24(out *jwriter.Writer, in AddPacksParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -2184,25 +2261,25 @@ func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(out *jwrite
 // MarshalJSON supports json.Marshaler interface
 func (v AddPacksParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(&w, v)
+	easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol24(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v AddPacksParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol23(w, v)
+	easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol24(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *AddPacksParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(&r, v)
+	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol24(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *AddPacksParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(l, v)
+	easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol24(l, v)
 }
 func easyjsonE4425964Decode(in *jlexer.Lexer, out *struct {
 	Name  string   `json:"name"`

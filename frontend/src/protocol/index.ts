@@ -76,6 +76,10 @@ export const ClientNote = myzod
                 method: myzod.literal('removePack'),
                 params: myzod.object({ num: myzod.number() }),
             }),
+            myzod.object({
+                method: myzod.literal('changeHideBomb'),
+                params: myzod.object({ hideBomb: myzod.boolean() }),
+            }),
         ])
     );
 
@@ -129,6 +133,7 @@ export const State = myzod.object({
         })
     ),
     timer: StateTimer.optional().nullable(),
+    hideBomb: myzod.boolean(),
 });
 
 export type ServerNote = Infer<typeof ServerNote>;

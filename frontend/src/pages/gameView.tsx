@@ -12,7 +12,18 @@ import {
     useTheme,
 } from '@material-ui/core';
 import { green, orange } from '@material-ui/core/colors';
-import { Add, ArrowBack, Delete, Link, Person, Search, Timer, TimerOff } from '@material-ui/icons';
+import {
+    Add,
+    ArrowBack,
+    Delete,
+    Link,
+    Person,
+    Search,
+    Timer,
+    TimerOff,
+    Visibility,
+    VisibilityOff,
+} from '@material-ui/icons';
 import { ok as assertTrue } from 'assert';
 import isArray from 'lodash/isArray';
 import range from 'lodash/range';
@@ -39,6 +50,7 @@ export interface Sender {
     changeTurnTime: (seconds: number) => void;
     addPacks: (packs: { name: string; words: string[] }[]) => void;
     removePack: (num: number) => void;
+    changeHideBomb: (HideBomb: boolean) => void;
 }
 
 export interface GameViewProps {
@@ -415,12 +427,9 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
     const end = isDefined(state.winner);
 
     return (
-        <Grid container direction="row" justify="space-between" alignItems="flex-start" spacing={2}>
-            <Grid item xs style={{ textAlign: 'left' }}>
-                <ButtonGroup
-                    variant="outlined"
-                    style={{ marginBottom: '0.5rem', marginRight: '0.5rem', display: 'inline' }}
-                >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignContent: 'flex-start', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignContent: 'flex-start', flexWrap: 'wrap' }}>
+                <ButtonGroup variant="outlined" style={{ marginBottom: '0.5rem', marginRight: '0.5rem' }}>
                     <Button
                         type="button"
                         variant={pState.spymaster ? undefined : 'contained'}
@@ -440,10 +449,25 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
                         Spymaster
                     </Button>
                 </ButtonGroup>
-                <ButtonGroup
-                    variant="outlined"
-                    style={{ marginBottom: '0.5rem', marginRight: '0.5rem', display: 'inline' }}
-                >
+                <ButtonGroup variant="outlined" style={{ marginBottom: '0.5rem', marginRight: '0.5rem' }}>
+                    <Button
+                        type="button"
+                        variant={state.hideBomb ? undefined : 'contained'}
+                        onClick={() => send.changeHideBomb(false)}
+                        startIcon={<Visibility />}
+                    >
+                        Show bomb
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={state.hideBomb ? 'contained' : undefined}
+                        onClick={() => send.changeHideBomb(true)}
+                        startIcon={<VisibilityOff />}
+                    >
+                        Hide bomb
+                    </Button>
+                </ButtonGroup>
+                <ButtonGroup variant="outlined" style={{ marginBottom: '0.5rem', marginRight: '0.5rem' }}>
                     <Button
                         type="button"
                         variant={isDefined(state.timer) ? undefined : 'contained'}
@@ -459,8 +483,8 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
                         <Timer />
                     </Button>
                 </ButtonGroup>
-            </Grid>
-            <Grid item xs style={{ textAlign: 'right' }}>
+            </div>
+            <div>
                 <Button
                     type="button"
                     variant={end ? 'contained' : 'outlined'}
@@ -470,8 +494,8 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
                 >
                     New game
                 </Button>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 };
 

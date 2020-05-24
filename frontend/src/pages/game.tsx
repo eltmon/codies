@@ -35,6 +35,8 @@ function useSender(sendNote: (r: ClientNote) => void, version: number): Sender {
             changeTurnTime: (seconds: number) => sendNote({ method: 'changeTurnTime', version, params: { seconds } }),
             addPacks: (packs: WordPack[]) => sendNote({ method: 'addPacks', version, params: { packs } }),
             removePack: (num: number) => sendNote({ method: 'removePack', version, params: { num } }),
+            changeHideBomb: (hideBomb: boolean) =>
+                sendNote({ method: 'changeHideBomb', version, params: { hideBomb } }),
         };
     }, [sendNote, version]);
 }

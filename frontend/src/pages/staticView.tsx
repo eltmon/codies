@@ -317,6 +317,7 @@ const props = {
         ],
         turnTime: 0,
         turnEnd: null,
+        hideBomb: false,
     },
     pState: {
         playerID: 'acb830de-80e2-4eba-9b56-81b089fd3f12',

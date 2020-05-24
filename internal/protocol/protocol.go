@@ -174,6 +174,13 @@ type ServerNote struct {
 	Params interface{}  `json:"params"`
 }
 
+const ChangeHideBombMethod = ClientMethod("changeHideBomb")
+
+//easyjson:json
+type ChangeHideBombParams struct {
+	HideBomb bool `json:"hideBomb"`
+}
+
 func StateNote(s *State) ServerNote {
 	return ServerNote{
 		Method: "state",
@@ -191,6 +198,7 @@ type State struct {
 	WordsLeft []int            `json:"wordsLeft"`
 	Lists     []*StateWordList `json:"lists"`
 	Timer     *StateTimer      `json:"timer"`
+	HideBomb  bool             `json:"hideBomb"`
 }
 
 //easyjson:json

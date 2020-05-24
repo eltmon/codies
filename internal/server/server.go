@@ -214,6 +214,8 @@ type Room struct {
 	turnSeconds  int
 	turnDeadline *time.Time
 	turnTimer    *time.Timer
+
+	hideBomb bool
 }
 
 type noteSender func(protocol.ServerNote)
@@ -411,6 +413,13 @@ func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) err
 		}
 		r.room.RemovePack(params.Num)
 
+	case protocol.ChangeHideBombMethod:
+		var params protocol.ChangeHideBombParams
+		if err := json.Unmarshal(note.Params, &params); err != nil {
+			return err
+		}
+		r.changeHideBomb(params.HideBomb)
+
 	default:
 		log.Printf("unhandled method: %s", note.Method)
 	}
@@ -469,6 +478,7 @@ func (r *Room) createRoomState(spymaster bool) *protocol.State {
 		Board:     make([][]*protocol.StateTile, room.Board.Rows),
 		WordsLeft: room.Board.WordCounts,
 		Lists:     make([]*protocol.StateWordList, len(room.WordLists)),
+		HideBomb:  r.hideBomb,
 	}
 
 	if r.turnDeadline != nil {
@@ -503,11 +513,17 @@ func (r *Room) createRoomState(spymaster bool) *protocol.State {
 			}
 
 			if spymaster || tile.Revealed || room.Winner != nil {
-				sTile.View = &protocol.StateView{
+				view := &protocol.StateView{
 					Team:    tile.Team,
 					Neutral: tile.Neutral,
 					Bomb:    tile.Bomb,
 				}
+
+				if !tile.Revealed && room.Winner != nil && r.hideBomb {
+					view.Bomb = false
+				}
+
+				sTile.View = view
 			}
 
 			tiles[col] = sTile
@@ -607,4 +623,15 @@ func (r *Room) startTimer() {
 	deadline := time.Now().Add(dur)
 	r.turnDeadline = &deadline
 	r.turnTimer = time.AfterFunc(dur, r.timerEndTurn)
+}
+
+// Must be called with r.mu locked.
+func (r *Room) changeHideBomb(HideBomb bool) {
+	if r.hideBomb == HideBomb {
+		return
+	}
+
+	r.hideBomb = true
+	r.room.Version++
+	r.sendAll()
 }
