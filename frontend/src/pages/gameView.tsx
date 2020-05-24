@@ -168,51 +168,57 @@ const Header = ({ send, state, pState, pTeam }: GameViewProps) => {
 const sliderMarks = range(30, 301, 30).map((v) => ({ value: v }));
 
 interface TimerSliderProps {
-    id: string;
+    version: number;
     timer: StateTimer;
     onCommit: (value: number) => void;
 }
 
-const TimerSlider = ({ timer, onCommit, id }: TimerSliderProps) => {
-    // Keep around the original value when this component is created.
-    // This prevents React from complaining about the defaultValue
-    // changing when the overall state changes.
-    const defaultValue = React.useRef(timer.turnTime);
-    const [value, setValue] = React.useState(timer.turnTime);
+interface TimerValue {
+    version: number;
+    turnTime: number;
+}
+
+const TimerSlider = ({ version, timer, onCommit }: TimerSliderProps) => {
+    const [value, setValue] = React.useState<TimerValue>({ version, turnTime: timer.turnTime });
+
+    React.useEffect(() => {
+        if (version !== value.version) {
+            setValue({ version, turnTime: timer.turnTime });
+        }
+    }, [version, value.version, timer.turnTime]);
 
     const valueStr = React.useMemo(() => {
-        switch (value) {
+        const turnTime = value.turnTime;
+        switch (turnTime) {
             case 30:
                 return '30 seconds';
             case 60:
                 return '60 seconds';
             default:
-                if (value % 60 === 0) {
-                    return `${value / 60} minutes`;
+                if (turnTime % 60 === 0) {
+                    return `${turnTime / 60} minutes`;
                 }
 
-                return `${(value / 60).toFixed(1)} minutes`;
+                return `${(turnTime / 60).toFixed(1)} minutes`;
         }
-    }, [value]);
+    }, [value.turnTime]);
 
     return (
         <>
-            <Typography id={id} gutterBottom>
+            <Typography id="timer-slider" gutterBottom>
                 Timer: {valueStr}
             </Typography>
             <Slider
                 style={{ color: orange[500] }}
-                aria-labelledby={id}
+                aria-labelledby="timer-slider"
+                value={value.turnTime}
                 marks={sliderMarks}
-                defaultValue={defaultValue.current}
                 step={null}
                 min={sliderMarks[0].value}
                 max={sliderMarks[sliderMarks.length - 1].value}
                 onChange={(_e, v) => {
                     assertTrue(!isArray(v));
-                    if (v !== value) {
-                        setValue(v);
-                    }
+                    setValue({ version: value.version, turnTime: v });
                 }}
                 onChangeCommitted={(_e, v) => {
                     assertTrue(!isArray(v));
@@ -382,7 +388,7 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
             </div>
             {!isDefined(state.timer) ? null : (
                 <div style={{ textAlign: 'left', marginTop: '1rem' }}>
-                    <TimerSlider id="timer-slider" timer={state.timer} onCommit={send.changeTurnTime} />
+                    <TimerSlider version={state.version} timer={state.timer} onCommit={send.changeTurnTime} />
                 </div>
             )}
         </>
