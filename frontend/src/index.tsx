@@ -8,6 +8,7 @@ import * as ReactDOM from 'react-dom';
 
 import { App } from './app';
 import { AboutButton } from './components/about';
+import * as serviceWorker from './serviceWorker';
 
 function useTheme() {
     const [themeName, setThemeName] = useLocalStorage<'light' | 'dark'>('themeName', 'dark');
@@ -70,3 +71,19 @@ const Root = (_props: {}) => {
 };
 
 ReactDOM.render(<Root />, document.getElementById('root'));
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://bit.ly/CRA-PWA
+serviceWorker.unregister();
+
+// TODO: Try using a service worker to aid in reloading when needed.
+// let refreshing = false;
+// serviceWorker.register({
+//     onUpdate: () => {
+//         if (!refreshing) {
+//             refreshing = true;
+//             window.location.reload();
+//         }
+//     }
+// });
