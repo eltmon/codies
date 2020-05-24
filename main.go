@@ -58,12 +58,7 @@ func main() {
 	r := chi.NewMux()
 	r.Use(middleware.Heartbeat("/ping"))
 	r.Use(middleware.Recoverer)
-
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.Compress(5))
-		fs := http.Dir("./frontend/build")
-		r.NotFound(http.FileServer(fs).ServeHTTP)
-	})
+	r.NotFound(staticRouter().ServeHTTP)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.NoCache)
@@ -202,6 +197,24 @@ func main() {
 	})
 
 	log.Fatal(g.Wait())
+}
+
+func staticRouter() http.Handler {
+	fs := http.Dir("./frontend/build")
+	fsh := http.FileServer(fs)
+
+	r := chi.NewMux()
+	r.Use(middleware.Compress(5))
+
+	r.Handle("/static/*", fsh)
+	r.Handle("/favicon/*", fsh)
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.NoCache)
+		r.Handle("/*", fsh)
+	})
+
+	return r
 }
 
 func httpErr(w http.ResponseWriter, code int) {
