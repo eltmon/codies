@@ -124,10 +124,15 @@ func (r *Room) NewGame() {
 		panic("not enough words")
 	}
 
-	r.Version++
 	r.Winner = nil
 	r.Turn = Team(r.rand.Intn(len(r.Teams)))
 	r.Board = newBoard(r.Rows, r.Cols, words, r.Turn, len(r.Teams), r.rand)
+
+	for _, p := range r.Players {
+		p.Spymaster = false
+	}
+
+	r.Version++
 }
 
 func (r *Room) EndTurn(id PlayerID) {
