@@ -1,8 +1,7 @@
 Hollywood
 Well
 Foot
-New
-York
+New York
 Spring
 Court
 Tube
@@ -40,7 +39,7 @@ Pass
 Missile
 Paste
 Drop
-Pheonix
+Phoenix
 Marble
 Staff
 Figure
@@ -173,8 +172,7 @@ Straw
 Switch
 Skyscraper
 Laser
-Scuba
-Diver
+Scuba Diver
 Africa
 Plastic
 Dwarf
@@ -206,8 +204,7 @@ Tap
 Mouth
 Ambulance
 Dress
-Ice
-Cream
+Ice Cream
 Rabbit
 Buck
 Agent
@@ -225,8 +222,7 @@ Film
 Button
 Snowman
 Helicopter
-Loch
-Ness
+Loch Ness
 Log
 Princess
 Time

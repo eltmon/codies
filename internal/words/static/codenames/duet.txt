@@ -1,7 +1,7 @@
 Drum
 Bride
 Wagon
-Univerity
+University
 Hit
 Ash
 Bass
@@ -13,8 +13,7 @@ Beam
 Spoon
 Country
 Nose
-King
-Arthur
+King Arthur
 Stamp
 Camp
 Brain
@@ -165,8 +164,7 @@ Drone
 Steam
 Biscuit
 Rip
-Notre
-Dame
+Notre Dame
 Lip
 Shampoo
 Cheese
@@ -239,9 +237,7 @@ Meter
 Sling
 Delta
 Step
-Joan
-of
-Arc
+Joan of Arc
 Comet
 Bath
 Polo
@@ -268,8 +264,7 @@ Yellowstone
 Silk
 Hose
 Sloth
-Kung
-Fu
+Kung Fu
 Clock
 Bean
 Lightning
@@ -279,8 +274,7 @@ Ranch
 Pearl
 Flat
 Virus
-Ice
-Age
+Ice Age
 Coffee
 Marathon
 Attic
@@ -297,8 +291,7 @@ Tornado
 Memory
 Jockey
 Minotaur
-Big
-Bang
+Big Bang
 Page
 Sphinx
 Crusader
@@ -325,8 +318,7 @@ Eden
 Army
 Paddle
 Saloon
-Mona
-Lisa
+Mona Lisa
 Mile
 Blizzard
 Quarter
@@ -368,8 +360,7 @@ Taste
 Fuel
 Mosquito
 Wizard
-Big
-Ben
+Big Ben
 Garden
 Waitress
 Shoot
