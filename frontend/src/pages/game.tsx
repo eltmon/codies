@@ -3,8 +3,9 @@ import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
 import { v4 } from 'uuid';
 
-import { assertIsDefined, assertNever, noop, websocketUrl } from '../common';
+import { assertIsDefined, assertNever, noop, reloadOutdatedPage, websocketUrl } from '../common';
 import { useServerTime } from '../hooks/useServerTime';
+import { version } from '../metadata.json';
 import { ClientNote, ServerNote, State, StatePlayer, TimeResponse, WordPack } from '../protocol';
 import { GameView, Sender } from './gameView';
 import { Loading } from './loading';
@@ -65,12 +66,22 @@ function useWS(roomID: string, playerID: string, nickname: string, dead: () => v
     const retry = React.useRef(0);
 
     return useWebSocket(socketUrl, {
-        queryParams: { roomID, playerID, nickname },
+        // The names here matter; explicitly naming them so that renaming
+        // these variables doesn't change the actual wire names.
+        //
+        // X-CODIES-VERSION would be cleaner, but the WS hook doesn't
+        // support anything but query params.
+        queryParams: { roomID: roomID, playerID: playerID, nickname: nickname, codiesVersion: version },
         reconnectAttempts,
         onMessage: () => {
             retry.current = 0;
         },
         onOpen,
+        onClose: (e: CloseEvent) => {
+            if (e.code === 4418) {
+                reloadOutdatedPage();
+            }
+        },
         shouldReconnect: () => {
             if (didUnmount.current) {
                 return false;

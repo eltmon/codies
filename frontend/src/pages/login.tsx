@@ -3,9 +3,18 @@ import isArray from 'lodash/isArray';
 import querystring from 'querystring';
 import * as React from 'react';
 
-import { assertIsDefined, isDefined } from '../common';
+import { assertIsDefined, isDefined, reloadOutdatedPage } from '../common';
 import { LoginForm, LoginFormData } from '../components/loginForm';
+import { version } from '../metadata.json';
 import { RoomResponse } from '../protocol';
+
+function checkOutdated(response: Response) {
+    if (response.status === 418) {
+        reloadOutdatedPage();
+        return true;
+    }
+    return false;
+}
 
 export interface LoginProps {
     onLogin: (roomID: string, nickname: string) => void;
@@ -69,12 +78,22 @@ export const Login = (props: LoginProps) => {
                     onSubmit={async (d: LoginFormData) => {
                         let id = roomID;
 
+                        const headers = {
+                            'X-CODIES-VERSION': version,
+                        };
+
                         if (id) {
                             const query = querystring.stringify({
                                 roomID: id,
                             });
-                            const response = await fetch('/api/exists?' + query);
+                            const response = await fetch('/api/exists?' + query, { headers });
+
+                            if (checkOutdated(response)) {
+                                return;
+                            }
+
                             await response.text();
+
                             if (!response.ok) {
                                 setErrorMessage('Room does not exist.');
                                 setRoomID(undefined);
@@ -90,7 +109,12 @@ export const Login = (props: LoginProps) => {
                                     roomPass: d.roomPass,
                                     create: d.create,
                                 });
-                                response = await fetch('/api/room', { method: 'POST', body: reqBody });
+                                response = await fetch('/api/room', { method: 'POST', body: reqBody, headers });
+
+                                if (checkOutdated(response)) {
+                                    return;
+                                }
+
                                 const body = await response.json();
                                 resp = RoomResponse.parse(body);
                                 // eslint-disable-next-line no-empty

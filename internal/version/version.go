@@ -10,3 +10,8 @@ func Version() string {
 	}
 	return version
 }
+
+// VersionSet returns true if the verison has been set.
+func VersionSet() bool {
+	return version != ""
+}

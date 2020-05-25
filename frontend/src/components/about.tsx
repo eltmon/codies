@@ -13,6 +13,8 @@ import {
 import { Help } from '@material-ui/icons';
 import * as React from 'react';
 
+import { version } from '../metadata.json';
+
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         modal: {
@@ -80,7 +82,8 @@ export const AboutButton = (props: { style?: React.CSSProperties }) => {
                         </p>
                         <p>
                             You can find this site&apos;s code on{' '}
-                            <NewPageLink href="https://github.com/zikaeroh/codies">GitHub</NewPageLink>.
+                            <NewPageLink href="https://github.com/zikaeroh/codies">GitHub</NewPageLink>. This site is
+                            currently running version {version}.
                         </p>
                     </Paper>
                 </Fade>

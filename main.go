@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -26,10 +27,13 @@ import (
 var args = struct {
 	Addr    string   `long:"addr" env:"CODIES_ADDR" description:"Address to listen at"`
 	Origins []string `long:"origins" env:"CODIES_ORIGINS" env-delim:"," description:"Additional valid origins for WebSocket connections"`
+	Prod    bool     `long:"prod" env:"CODIES_PROD" description:"Enables production mode"`
 	Debug   bool     `long:"debug" env:"CODIES_DEBUG" description:"Enables debug mode"`
 }{
 	Addr: ":5000",
 }
+
+var wsOpts *websocket.AcceptOptions
 
 func main() {
 	rand.Seed(time.Now().Unix())
@@ -40,15 +44,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	if !args.Prod && !args.Debug {
+		log.Fatal("missing required option --prod or --debug")
+	} else if args.Prod && args.Debug {
+		log.Fatal("must specify either --prod or --debug")
+	}
+
 	log.Printf("starting codies server, version %s", version.Version())
 
-	wsOpts := &websocket.AcceptOptions{
+	wsOpts = &websocket.AcceptOptions{
 		OriginPatterns: args.Origins,
 	}
 
 	if args.Debug {
 		log.Println("starting in debug mode, allowing any WebSocket origin host")
 		wsOpts.OriginPatterns = []string{"*"}
+	} else {
+		if !version.VersionSet() {
+			log.Fatal("running production build without version set")
+		}
 	}
 
 	g, ctx := errgroup.WithContext(ctxutil.Interrupt())
@@ -68,103 +82,6 @@ func main() {
 			_ = json.NewEncoder(w).Encode(&protocol.TimeResponse{Time: time.Now()})
 		})
 
-		r.Get("/api/exists", func(w http.ResponseWriter, r *http.Request) {
-			query := &protocol.ExistsQuery{}
-			if err := queryparam.Parse(r.URL.Query(), query); err != nil {
-				httpErr(w, http.StatusBadRequest)
-				return
-			}
-
-			room := srv.FindRoomByID(query.RoomID)
-			if room == nil {
-				w.WriteHeader(http.StatusNotFound)
-			} else {
-				w.WriteHeader(http.StatusOK)
-			}
-
-			_, _ = w.Write([]byte("."))
-		})
-
-		r.Post("/api/room", func(w http.ResponseWriter, r *http.Request) {
-			defer r.Body.Close()
-
-			req := &protocol.RoomRequest{}
-			if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-				httpErr(w, http.StatusBadRequest)
-				return
-			}
-
-			if !req.Valid() {
-				httpErr(w, http.StatusBadRequest)
-				return
-			}
-
-			resp := &protocol.RoomResponse{}
-
-			w.Header().Add("Content-Type", "application/json")
-
-			if req.Create {
-				room, err := srv.CreateRoom(req.RoomName, req.RoomPass)
-				if err != nil {
-					switch err {
-					case server.ErrRoomExists:
-						resp.Error = stringPtr("Room already exists.")
-						w.WriteHeader(http.StatusBadRequest)
-					case server.ErrTooManyRooms:
-						resp.Error = stringPtr("Too many rooms.")
-						w.WriteHeader(http.StatusServiceUnavailable)
-					default:
-						resp.Error = stringPtr("An unknown error occurred.")
-						w.WriteHeader(http.StatusInternalServerError)
-					}
-				} else {
-					resp.ID = &room.ID
-					w.WriteHeader(http.StatusOK)
-				}
-			} else {
-				room := srv.FindRoom(req.RoomName)
-				if room == nil || room.Password != req.RoomPass {
-					resp.Error = stringPtr("Room not found or password does not match.")
-					w.WriteHeader(http.StatusNotFound)
-				} else {
-					resp.ID = &room.ID
-					w.WriteHeader(http.StatusOK)
-				}
-			}
-
-			_ = json.NewEncoder(w).Encode(resp)
-		})
-
-		r.Get("/api/ws", func(w http.ResponseWriter, r *http.Request) {
-			query := &protocol.WSQuery{}
-			if err := queryparam.Parse(r.URL.Query(), query); err != nil {
-				httpErr(w, http.StatusBadRequest)
-				return
-			}
-
-			if !query.Valid() {
-				httpErr(w, http.StatusBadRequest)
-				return
-			}
-
-			room := srv.FindRoomByID(query.RoomID)
-			if room == nil {
-				httpErr(w, http.StatusNotFound)
-				return
-			}
-
-			c, err := websocket.Accept(w, r, wsOpts)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			g.Go(func() error {
-				room.HandleConn(query.PlayerID, query.Nickname, c)
-				return nil
-			})
-		})
-
 		r.Get("/api/stats", func(w http.ResponseWriter, r *http.Request) {
 			rooms, clients := srv.Stats()
 
@@ -173,6 +90,109 @@ func main() {
 			_ = enc.Encode(&protocol.StatsResponse{
 				Rooms:   rooms,
 				Clients: clients,
+			})
+		})
+
+		r.Group(func(r chi.Router) {
+			if !args.Debug {
+				r.Use(checkVersion)
+			}
+
+			r.Get("/api/exists", func(w http.ResponseWriter, r *http.Request) {
+				query := &protocol.ExistsQuery{}
+				if err := queryparam.Parse(r.URL.Query(), query); err != nil {
+					httpErr(w, http.StatusBadRequest)
+					return
+				}
+
+				room := srv.FindRoomByID(query.RoomID)
+				if room == nil {
+					w.WriteHeader(http.StatusNotFound)
+				} else {
+					w.WriteHeader(http.StatusOK)
+				}
+
+				_, _ = w.Write([]byte("."))
+			})
+
+			r.Post("/api/room", func(w http.ResponseWriter, r *http.Request) {
+				defer r.Body.Close()
+
+				req := &protocol.RoomRequest{}
+				if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+					httpErr(w, http.StatusBadRequest)
+					return
+				}
+
+				if !req.Valid() {
+					httpErr(w, http.StatusBadRequest)
+					return
+				}
+
+				resp := &protocol.RoomResponse{}
+
+				w.Header().Add("Content-Type", "application/json")
+
+				if req.Create {
+					room, err := srv.CreateRoom(req.RoomName, req.RoomPass)
+					if err != nil {
+						switch err {
+						case server.ErrRoomExists:
+							resp.Error = stringPtr("Room already exists.")
+							w.WriteHeader(http.StatusBadRequest)
+						case server.ErrTooManyRooms:
+							resp.Error = stringPtr("Too many rooms.")
+							w.WriteHeader(http.StatusServiceUnavailable)
+						default:
+							resp.Error = stringPtr("An unknown error occurred.")
+							w.WriteHeader(http.StatusInternalServerError)
+						}
+					} else {
+						resp.ID = &room.ID
+						w.WriteHeader(http.StatusOK)
+					}
+				} else {
+					room := srv.FindRoom(req.RoomName)
+					if room == nil || room.Password != req.RoomPass {
+						resp.Error = stringPtr("Room not found or password does not match.")
+						w.WriteHeader(http.StatusNotFound)
+					} else {
+						resp.ID = &room.ID
+						w.WriteHeader(http.StatusOK)
+					}
+				}
+
+				_ = json.NewEncoder(w).Encode(resp)
+			})
+
+			r.Get("/api/ws", func(w http.ResponseWriter, r *http.Request) {
+				query := &protocol.WSQuery{}
+				if err := queryparam.Parse(r.URL.Query(), query); err != nil {
+					httpErr(w, http.StatusBadRequest)
+					return
+				}
+
+				if !query.Valid() {
+					httpErr(w, http.StatusBadRequest)
+					return
+				}
+
+				room := srv.FindRoomByID(query.RoomID)
+				if room == nil {
+					httpErr(w, http.StatusNotFound)
+					return
+				}
+
+				c, err := websocket.Accept(w, r, wsOpts)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+
+				g.Go(func() error {
+					room.HandleConn(query.PlayerID, query.Nickname, c)
+					return nil
+				})
 			})
 		})
 	})
@@ -215,6 +235,39 @@ func staticRouter() http.Handler {
 	})
 
 	return r
+}
+
+func checkVersion(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		want := version.Version()
+
+		toCheck := []string{
+			r.Header.Get("X-CODIES-VERSION"),
+			r.URL.Query().Get("codiesVersion"),
+		}
+
+		for _, got := range toCheck {
+			if got == want {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		reason := fmt.Sprintf("client version too old, please reload to get %s", want)
+
+		if r.Header.Get("Upgrade") == "websocket" {
+			c, err := websocket.Accept(w, r, wsOpts)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			c.Close(4418, reason)
+			return
+		}
+
+		w.WriteHeader(http.StatusTeapot)
+		fmt.Fprint(w, reason)
+	})
 }
 
 func httpErr(w http.ResponseWriter, code int) {

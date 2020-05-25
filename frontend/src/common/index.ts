@@ -30,3 +30,8 @@ export function assertIsDefined<T>(val: T): asserts val is NonNullable<T> {
 }
 
 export const nameofFactory = <T>() => (name: keyof T) => name;
+
+export function reloadOutdatedPage() {
+    console.log('Frontend version appears to be outdated; reloading to allow the browser to update.');
+    window.location.reload(true);
+}
