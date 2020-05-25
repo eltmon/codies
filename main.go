@@ -128,14 +128,18 @@ func main() {
 					return
 				}
 
-				if !req.Valid() {
-					httpErr(w, http.StatusBadRequest)
+				w.Header().Add("Content-Type", "application/json")
+
+				if msg, valid := req.Valid(); !valid {
+					resp := &protocol.RoomResponse{
+						Error: stringPtr(msg),
+					}
+					w.WriteHeader(http.StatusBadRequest)
+					_ = json.NewEncoder(w).Encode(resp)
 					return
 				}
 
 				resp := &protocol.RoomResponse{}
-
-				w.Header().Add("Content-Type", "application/json")
 
 				if req.Create {
 					room, err := srv.CreateRoom(req.RoomName, req.RoomPass)
@@ -176,7 +180,7 @@ func main() {
 					return
 				}
 
-				if !query.Valid() {
+				if _, valid := query.Valid(); !valid {
 					httpErr(w, http.StatusBadRequest)
 					return
 				}

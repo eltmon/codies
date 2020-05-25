@@ -23,16 +23,20 @@ type RoomRequest struct {
 	Create   bool   `json:"create"`
 }
 
-func (r *RoomRequest) Valid() bool {
-	if len(r.RoomName) < 3 || len(r.RoomName) > 16 {
-		return false
+func (r *RoomRequest) Valid() (msg string, valid bool) {
+	if len(r.RoomName) == 0 {
+		return "Room name cannot be empty.", false
+	}
+
+	if len(r.RoomName) > 20 {
+		return "Room name too long.", false
 	}
 
 	if len(r.RoomPass) == 0 {
-		return false
+		return "Room pass cannot be empty.", false
 	}
 
-	return true
+	return "", true
 }
 
 //easyjson:json
@@ -58,20 +62,24 @@ type WSQuery struct {
 	Nickname string    `queryparam:"nickname"`
 }
 
-func (w *WSQuery) Valid() bool {
+func (w *WSQuery) Valid() (msg string, valid bool) {
 	if w.RoomID == "" {
-		return false
+		return "Room ID cannot be empty.", false
 	}
 
 	if w.PlayerID == uuid.Nil {
-		return false
+		return "Player ID cannot be empty", false
 	}
 
-	if len(w.Nickname) < 3 || len(w.Nickname) > 16 {
-		return false
+	if len(w.Nickname) == 0 {
+		return "Nickname cannot be empty.", false
 	}
 
-	return true
+	if len(w.Nickname) > 16 {
+		return "Nickname too long.", false
+	}
+
+	return "", true
 }
 
 //easyjson:json

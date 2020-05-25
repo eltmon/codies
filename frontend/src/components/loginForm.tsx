@@ -32,6 +32,7 @@ export interface LoginFormProps {
     errorMessage?: string;
 }
 
+// Sync rules with protocol.go.
 export function LoginForm(props: LoginFormProps) {
     const classes = useStyles();
     const { control, handleSubmit, errors, setValue, register } = useForm<LoginFormData>({});
@@ -54,7 +55,7 @@ export function LoginForm(props: LoginFormProps) {
                     label="Nickname"
                     defaultValue=""
                     error={!!errors.nickname}
-                    rules={{ required: true, minLength: 3, maxLength: 16 }}
+                    rules={{ required: true, minLength: 1, maxLength: 16 }}
                     fullWidth={true}
                     inputProps={noComplete}
                     autoFocus
@@ -71,7 +72,7 @@ export function LoginForm(props: LoginFormProps) {
                             label="Room name"
                             defaultValue=""
                             error={!!errors.roomName}
-                            rules={{ required: true, minLength: 3, maxLength: 16 }}
+                            rules={{ required: true, minLength: 1, maxLength: 20 }}
                             fullWidth={true}
                             inputProps={noComplete}
                         />

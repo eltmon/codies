@@ -370,7 +370,7 @@ func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) err
 		}
 
 		// Sync with protocol.go's validation method.
-		if len(params.Nickname) < 3 || len(params.Nickname) > 16 {
+		if len(params.Nickname) == 0 || len(params.Nickname) > 16 {
 			return nil
 		}
 
