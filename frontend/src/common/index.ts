@@ -35,3 +35,8 @@ export function reloadOutdatedPage() {
     console.log('Frontend version appears to be outdated; reloading to allow the browser to update.');
     window.location.reload(true);
 }
+
+export const noComplete = {
+    autoComplete: 'off',
+    'data-lpignore': 'true',
+};

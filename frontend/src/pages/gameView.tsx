@@ -1,12 +1,16 @@
 import {
+    Backdrop,
     Button,
     ButtonGroup,
     createStyles,
+    Fade,
     Grid,
     IconButton,
     makeStyles,
+    Modal,
     Paper,
     Slider,
+    TextField,
     Theme,
     Typography,
     useTheme,
@@ -29,8 +33,9 @@ import isArray from 'lodash/isArray';
 import range from 'lodash/range';
 import { DropzoneDialog } from 'material-ui-dropzone';
 import * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
-import { isDefined } from '../common';
+import { isDefined, nameofFactory, noComplete } from '../common';
 import { Board } from '../components/board';
 import { ClipboardButton } from '../components/clipboard';
 import { useServerTime } from '../hooks/useServerTime';
@@ -242,6 +247,99 @@ const TimerSlider = ({ version, timer, onCommit }: TimerSliderProps) => {
     );
 };
 
+const useChangeNicknameStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        modal: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        paper: {
+            border: '2px solid #000',
+            boxShadow: theme.shadows[5],
+            padding: theme.spacing(2, 4, 3),
+            maxWidth: '500px',
+        },
+        label: {
+            color: theme.palette.text.secondary + ' !important',
+        },
+    })
+);
+
+interface ChangeNicknameFormData {
+    nickname: string;
+}
+
+const ChangeNicknameButton = ({ send }: { send: Sender }) => {
+    const classes = useChangeNicknameStyles();
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    const formName = React.useMemo(() => nameofFactory<ChangeNicknameFormData>(), []);
+    const { control, handleSubmit, errors } = useForm<ChangeNicknameFormData>({});
+    const doSubmit = handleSubmit((data) => {
+        handleClose();
+        send.changeNickname(data.nickname);
+    });
+
+    return (
+        <>
+            <Button
+                type="button"
+                variant="outlined"
+                size="small"
+                style={{ width: '100%', marginTop: '0.5rem' }}
+                onClick={handleOpen}
+            >
+                Change nickname
+            </Button>
+            <Modal
+                className={classes.modal}
+                open={open}
+                onClose={handleClose}
+                closeAfterTransition
+                BackdropComponent={Backdrop}
+                BackdropProps={{
+                    timeout: 500,
+                }}
+            >
+                <Fade in={open}>
+                    <Paper className={classes.paper}>
+                        <form>
+                            <div>
+                                <Controller
+                                    control={control}
+                                    as={TextField}
+                                    name={formName('nickname')}
+                                    label="Nickname"
+                                    defaultValue=""
+                                    error={!!errors.nickname}
+                                    rules={{ required: true, minLength: 1, maxLength: 16 }}
+                                    fullWidth={true}
+                                    inputProps={noComplete}
+                                    autoFocus
+                                    InputLabelProps={{ classes: { focused: classes.label } }}
+                                />
+                            </div>
+                            <div>
+                                <Button
+                                    type="submit"
+                                    onClick={doSubmit}
+                                    variant="contained"
+                                    style={{ width: '100%', marginTop: '0.5rem' }}
+                                >
+                                    Change
+                                </Button>
+                            </div>
+                        </form>
+                    </Paper>
+                </Fade>
+            </Modal>
+        </>
+    );
+};
+
 const useSidebarStyles = makeStyles((_theme: Theme) =>
     createStyles({
         dropzone: {
@@ -323,11 +421,12 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                     type="button"
                     variant="outlined"
                     size="small"
-                    style={{ width: '100%', marginTop: '0.5rem' }}
+                    style={{ width: '100%', marginTop: '1.5rem' }}
                     onClick={send.randomizeTeams}
                 >
                     Randomize teams
                 </Button>
+                <ChangeNicknameButton send={send} />
             </Paper>
 
             <h2>Packs</h2>

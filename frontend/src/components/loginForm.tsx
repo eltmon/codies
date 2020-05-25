@@ -2,7 +2,7 @@ import { Button, ButtonGroup, createStyles, makeStyles, TextField, Theme } from 
 import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
-import { nameofFactory } from '../common';
+import { nameofFactory, noComplete } from '../common';
 
 export interface LoginFormData {
     nickname: string;
@@ -13,15 +13,13 @@ export interface LoginFormData {
 
 const formName = nameofFactory<LoginFormData>();
 
-const noComplete = {
-    autoComplete: 'off',
-    'data-lpignore': 'true',
-};
-
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         padBottom: {
             marginBottom: theme.spacing(2),
+        },
+        label: {
+            color: theme.palette.text.secondary + ' !important',
         },
     })
 );
@@ -59,6 +57,7 @@ export function LoginForm(props: LoginFormProps) {
                     fullWidth={true}
                     inputProps={noComplete}
                     autoFocus
+                    InputLabelProps={{ classes: { focused: classes.label } }}
                 />
             </div>
 
@@ -75,6 +74,7 @@ export function LoginForm(props: LoginFormProps) {
                             rules={{ required: true, minLength: 1, maxLength: 20 }}
                             fullWidth={true}
                             inputProps={noComplete}
+                            InputLabelProps={{ classes: { focused: classes.label } }}
                         />
                     </div>
 
@@ -90,6 +90,7 @@ export function LoginForm(props: LoginFormProps) {
                             rules={{ required: true, minLength: 1 }}
                             fullWidth={true}
                             inputProps={noComplete}
+                            InputLabelProps={{ classes: { focused: classes.label } }}
                         />
                     </div>
                 </>

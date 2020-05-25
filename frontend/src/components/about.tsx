@@ -38,14 +38,8 @@ const NewPageLink = (props: LinkProps) => (
 export const AboutButton = (props: { style?: React.CSSProperties }) => {
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
-
-    const handleOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
 
     return (
         <span style={props.style}>
