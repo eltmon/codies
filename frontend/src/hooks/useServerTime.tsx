@@ -9,7 +9,7 @@ const Context = React.createContext<ServerTime>(Object.seal({ setOffset: () => {
 
 export const ServerTimeProvider = (props: React.PropsWithChildren<{}>) => {
     const [offset, setOffset] = React.useState(0);
-    const value = React.useMemo(() => Object.seal({ setOffset, now: () => Date.now() + offset }), [offset, setOffset]);
+    const value = React.useMemo(() => Object.seal({ setOffset, now: () => Date.now() + offset }), [offset]);
     return <Context.Provider value={value}>{props.children}</Context.Provider>;
 };
 

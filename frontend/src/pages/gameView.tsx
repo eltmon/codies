@@ -84,6 +84,7 @@ const CenterText = ({ winner, timer, turn }: State) => {
     const classes = useCenterStyles();
     const [countdown, setCountdown] = React.useState<number | undefined>();
     const { now } = useServerTime();
+    const deadline = timer?.turnEnd;
 
     React.useEffect(() => {
         const updateCountdown = () => {
@@ -92,14 +93,13 @@ const CenterText = ({ winner, timer, turn }: State) => {
                 return;
             }
 
-            if (!isDefined(timer)) {
+            if (deadline === undefined) {
                 if (countdown !== undefined) {
                     setCountdown(undefined);
                 }
                 return;
             }
 
-            const deadline = timer.turnEnd;
             const diff = deadline.getTime() - now();
 
             const between = Math.floor(diff / 1000);
@@ -120,7 +120,7 @@ const CenterText = ({ winner, timer, turn }: State) => {
         }, 200);
 
         return () => window.clearInterval(interval);
-    }, [countdown, setCountdown, winner, timer, now]);
+    }, [countdown, winner, deadline, now]);
 
     const centerText = React.useMemo(() => {
         const text = isDefined(winner) ? `${teamSpecs[winner].name} wins!` : `${teamSpecs[turn].name}'s turn`;
