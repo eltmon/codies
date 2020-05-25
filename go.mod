@@ -9,6 +9,7 @@ require (
 	github.com/mailru/easyjson v0.7.1
 	github.com/mjibson/esc v0.2.0
 	github.com/posener/ctxutil v1.0.0
+	github.com/prometheus/client_golang v1.6.0
 	github.com/speps/go-hashids v2.0.0+incompatible
 	github.com/tomwright/queryparam/v4 v4.1.0
 	go.uber.org/atomic v1.6.0

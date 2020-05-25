@@ -139,6 +139,7 @@ func (s *Server) CreateRoom(name, password string) (*Room, error) {
 	s.rooms[name] = room
 	s.roomIDs[room.ID] = room
 	s.roomCount.Inc()
+	metricRooms.Inc()
 
 	log.Printf("created new room '%s' (%s)", name, room.ID)
 
@@ -183,6 +184,7 @@ func (s *Server) prune() {
 		delete(s.rooms, name)
 		delete(s.roomIDs, room.ID)
 		s.roomCount.Dec()
+		metricRooms.Dec()
 	}
 
 	log.Printf("pruned %d rooms", len(toRemove))
@@ -221,6 +223,9 @@ type Room struct {
 type noteSender func(protocol.ServerNote)
 
 func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn) {
+	metricClients.Inc()
+	defer metricClients.Dec()
+
 	clientCount := r.clientCount.Inc()
 	log.Printf("client connected to room '%s' (%s); %v clients currently connected to %v rooms", r.Name, r.ID, clientCount, r.roomCount.Load())
 
@@ -237,7 +242,11 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 		g.Go(func() error {
 			ctx, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
-			return wsjson.Write(ctx, c, &s)
+			if err := wsjson.Write(ctx, c, &s); err != nil {
+				return err
+			}
+			metricSent.Inc()
+			return nil
 		})
 	}
 	r.room.AddPlayer(playerID, nickname)
@@ -280,6 +289,7 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 			}
 
 			r.lastSeen.Store(time.Now())
+			metricRecieved.Inc()
 
 			if err := r.handleNote(playerID, &note); err != nil {
 				log.Println("error handling note:", err)

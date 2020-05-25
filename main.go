@@ -8,14 +8,13 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"reflect"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/gofrs/uuid"
 	"github.com/jessevdk/go-flags"
 	"github.com/posener/ctxutil"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tomwright/queryparam/v4"
 	"github.com/zikaeroh/codies/internal/protocol"
 	"github.com/zikaeroh/codies/internal/server"
@@ -70,9 +69,14 @@ func main() {
 	srv := server.NewServer()
 
 	r := chi.NewMux()
+
+	r.Use(func(next http.Handler) http.Handler {
+		return promhttp.InstrumentHandlerCounter(metricRequest, next)
+	})
+
 	r.Use(middleware.Heartbeat("/ping"))
 	r.Use(middleware.Recoverer)
-	r.NotFound(staticRouter().ServeHTTP)
+	r.NotFound(staticHandler().ServeHTTP)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.NoCache)
@@ -201,25 +205,13 @@ func main() {
 		return srv.Run(ctx)
 	})
 
-	httpSrv := http.Server{Addr: args.Addr, Handler: r}
-
-	g.Go(func() error {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		return httpSrv.Shutdown(ctx)
-	})
-
-	g.Go(func() error {
-		return httpSrv.ListenAndServe()
-	})
+	runServer(ctx, g, args.Addr, r)
+	runServer(ctx, g, ":2112", prometheusHandler())
 
 	log.Fatal(g.Wait())
 }
 
-func staticRouter() http.Handler {
+func staticHandler() http.Handler {
 	fs := http.Dir("./frontend/build")
 	fsh := http.FileServer(fs)
 
@@ -270,17 +262,25 @@ func checkVersion(next http.Handler) http.Handler {
 	})
 }
 
-func httpErr(w http.ResponseWriter, code int) {
-	http.Error(w, http.StatusText(code), code)
+func runServer(ctx context.Context, g *errgroup.Group, addr string, handler http.Handler) {
+	httpSrv := http.Server{Addr: addr, Handler: handler}
+
+	g.Go(func() error {
+		<-ctx.Done()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		return httpSrv.Shutdown(ctx)
+	})
+
+	g.Go(func() error {
+		return httpSrv.ListenAndServe()
+	})
 }
 
-func stringPtr(s string) *string {
-	return &s
-}
-
-func init() {
-	queryparam.DefaultParser.ValueParsers[reflect.TypeOf(uuid.UUID{})] = func(value string, _ string) (reflect.Value, error) {
-		id, err := uuid.FromString(value)
-		return reflect.ValueOf(id), err
-	}
+func prometheusHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	return mux
 }

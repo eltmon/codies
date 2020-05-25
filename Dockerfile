@@ -21,7 +21,7 @@ WORKDIR /codies
 COPY ./go.mod ./go.sum ./
 RUN go mod download
 # Manually copying the required files to make this image's cache only include Go code.
-COPY ./main.go ./main.go
+COPY *.go ./
 COPY ./internal ./internal
 
 ARG version
