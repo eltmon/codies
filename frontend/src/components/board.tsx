@@ -108,7 +108,7 @@ const Tile = ({ tile, onClick, spymaster, myTurn, winner }: TileProps) => {
                 className={classes.button}
                 onClick={onClick}
                 style={tileStyle(tile, spymaster)}
-                disabled={spymaster || !myTurn || winner}
+                disabled={spymaster || !myTurn || winner || tile.revealed}
             >
                 <Typography variant="h6" className={classes.typo}>
                     {tile.word}
