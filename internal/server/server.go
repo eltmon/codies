@@ -239,15 +239,20 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 
 	r.mu.Lock()
 	r.players[playerID] = func(s protocol.ServerNote) {
-		g.Go(func() error {
+		if ctx.Err() != nil {
+			return
+		}
+
+		// It's not safe to start more group goroutines concurrently; just use a regular
+		// goroutine and hope that errors here will be reflected later via ping/receive failures.
+		go func() {
 			ctx, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
 			if err := wsjson.Write(ctx, c, &s); err != nil {
-				return err
+				return
 			}
 			metricSent.Inc()
-			return nil
-		})
+		}()
 	}
 	r.room.AddPlayer(playerID, nickname)
 	r.sendAll()

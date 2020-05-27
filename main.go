@@ -210,7 +210,10 @@ func main() {
 	})
 
 	runServer(ctx, g, args.Addr, r)
-	runServer(ctx, g, ":2112", prometheusHandler())
+
+	if args.Prod {
+		runServer(ctx, g, ":2112", prometheusHandler())
+	}
 
 	log.Fatal(g.Wait())
 }
