@@ -462,7 +462,13 @@ func (r *Room) createStateFor(playerID game.PlayerID) *protocol.State {
 		r.state = r.createStateCache()
 	}
 
-	if r.room.Players[playerID].Spymaster {
+	// Temporary verbose access to attempt to figure out which of these is (impossibly) failing.
+	room := r.room
+	players := room.Players
+	player := players[playerID]
+	spymaster := player.Spymaster
+
+	if spymaster {
 		return r.state.spymaster
 	}
 	return r.state.guesser
