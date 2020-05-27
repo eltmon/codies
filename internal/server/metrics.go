@@ -20,7 +20,7 @@ var (
 		Help:      "Total number of clients.",
 	})
 
-	metricreceived = promauto.NewCounter(prometheus.CounterOpts{
+	metricReceived = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "codies",
 		Subsystem: "codies",
 		Name:      "received_total",
