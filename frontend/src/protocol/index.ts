@@ -1,17 +1,9 @@
 import myzod, { Infer } from 'myzod';
+import { DeepReadonly } from 'ts-essentials';
 
 // See protocol.go.
 
-export type RoomResponse = Infer<typeof RoomResponse>;
-export const RoomResponse = myzod.object({
-    id: myzod.string().optional().nullable(),
-    error: myzod.string().optional().nullable(),
-});
-
-export type TimeResponse = Infer<typeof TimeResponse>;
-export const TimeResponse = myzod.object({
-    time: myzod.date(),
-});
+// Messages sent from client to server.
 
 export type WordPack = Infer<typeof WordPack>;
 const WordPack = myzod.object({
@@ -83,7 +75,20 @@ export const ClientNote = myzod
         ])
     );
 
-export type StateTile = Infer<typeof StateTile>;
+// Messages sent from server to client.
+
+export type RoomResponse = DeepReadonly<Infer<typeof RoomResponse>>;
+export const RoomResponse = myzod.object({
+    id: myzod.string().optional().nullable(),
+    error: myzod.string().optional().nullable(),
+});
+
+export type TimeResponse = DeepReadonly<Infer<typeof TimeResponse>>;
+export const TimeResponse = myzod.object({
+    time: myzod.date(),
+});
+
+export type StateTile = DeepReadonly<Infer<typeof StateTile>>;
 const StateTile = myzod.object({
     word: myzod.string(),
     revealed: myzod.boolean(),
@@ -97,26 +102,26 @@ const StateTile = myzod.object({
         .nullable(),
 });
 
-export type StateBoard = Infer<typeof StateBoard>;
+export type StateBoard = DeepReadonly<Infer<typeof StateBoard>>;
 const StateBoard = myzod.array(myzod.array(StateTile));
 
-export type StatePlayer = Infer<typeof StatePlayer>;
+export type StatePlayer = DeepReadonly<Infer<typeof StatePlayer>>;
 const StatePlayer = myzod.object({
     playerID: myzod.string(),
     nickname: myzod.string(),
     spymaster: myzod.boolean(),
 });
 
-export type StateTeams = Infer<typeof StateTeams>;
+export type StateTeams = DeepReadonly<Infer<typeof StateTeams>>;
 const StateTeams = myzod.array(myzod.array(StatePlayer));
 
-export type StateTimer = Infer<typeof StateTimer>;
+export type StateTimer = DeepReadonly<Infer<typeof StateTimer>>;
 const StateTimer = myzod.object({
     turnTime: myzod.number(),
     turnEnd: myzod.date(),
 });
 
-export type State = Infer<typeof State>;
+export type State = DeepReadonly<Infer<typeof State>>;
 export const State = myzod.object({
     version: myzod.number(),
     teams: StateTeams,
@@ -136,7 +141,7 @@ export const State = myzod.object({
     hideBomb: myzod.boolean(),
 });
 
-export type ServerNote = Infer<typeof ServerNote>;
+export type ServerNote = DeepReadonly<Infer<typeof ServerNote>>;
 export const ServerNote = myzod.union([
     myzod.object({
         method: myzod.literal('state'),
