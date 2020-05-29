@@ -1,10 +1,10 @@
 import { fail } from 'assert';
 import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
-import { v4 } from 'uuid';
+import { DeepReadonly } from 'ts-essentials';
 
 import { assertIsDefined, assertNever, noop, reloadOutdatedPage, websocketUrl } from '../common';
-import { useServerTime } from '../hooks/useServerTime';
+import { useServerTime, useStableUUID } from '../hooks';
 import { version as codiesVersion } from '../metadata.json';
 import { ClientNote, PartialClientNote, ServerNote, State, StatePlayer, TimeResponse, WordPack } from '../protocol';
 import { GameView, Sender } from './gameView';
@@ -175,8 +175,8 @@ export interface GameProps {
     leave: () => void;
 }
 
-export const Game = (props: GameProps) => {
-    const [playerID] = React.useState(v4);
+export const Game = (props: DeepReadonly<GameProps>) => {
+    const playerID = useStableUUID();
     const nickname = React.useRef(props.nickname); // Preserve a nickname for use in reconnects.
 
     const syncTime = useSyncedServerTime();
@@ -184,6 +184,7 @@ export const Game = (props: GameProps) => {
 
     const reducer = useStateReducer(sendJsonMessage);
     const [state, dispatch] = React.useReducer(reducer, undefined);
+    const player = usePlayer(playerID, state);
     const send = useSender(dispatch);
 
     React.useEffect(() => {
@@ -201,8 +202,6 @@ export const Game = (props: GameProps) => {
                 assertNever(note.method);
         }
     }, [lastJsonMessage]);
-
-    const player = usePlayer(playerID, state);
 
     if (!state) {
         return <Loading />;

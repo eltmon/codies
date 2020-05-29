@@ -38,7 +38,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { isDefined, nameofFactory, noComplete } from '../common';
 import { Board } from '../components/board';
 import { ClipboardButton } from '../components/clipboard';
-import { useServerTime } from '../hooks/useServerTime';
+import { useServerTime } from '../hooks';
 import { State, StatePlayer, StateTimer, WordPack } from '../protocol';
 import { teamSpecs } from '../teams';
 
@@ -511,10 +511,11 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
 
 const Board2 = ({ send, state, pState, pTeam }: GameViewProps) => {
     const myTurn = state.turn === pTeam;
+
     return (
         <Board
             words={state.board}
-            onClick={(row, col) => myTurn && !pState.spymaster && send.reveal(row, col)}
+            onClick={send.reveal}
             spymaster={pState.spymaster}
             myTurn={myTurn}
             winner={isDefined(state.winner)}
@@ -637,6 +638,15 @@ const useStyles = makeStyles((theme: Theme) =>
         sidebar: {
             gridArea: 'sidebar',
         },
+        leaveWrapper: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            margin: '0.5rem',
+        },
+        leaveButton: {
+            marginRight: '0.5rem',
+        },
     })
 );
 
@@ -645,15 +655,8 @@ export const GameView = (props: GameViewProps) => {
 
     return (
         <div className={classes.root}>
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    margin: '0.5rem',
-                }}
-            >
-                <Button type="button" onClick={props.leave} startIcon={<ArrowBack />} style={{ marginRight: '0.5rem' }}>
+            <div className={classes.leaveWrapper}>
+                <Button type="button" onClick={props.leave} startIcon={<ArrowBack />} className={classes.leaveButton}>
                     Leave
                 </Button>
                 <ClipboardButton

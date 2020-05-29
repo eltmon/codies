@@ -2,8 +2,9 @@ import { Button, createStyles, makeStyles, Theme, Typography } from '@material-u
 import { grey, orange, red } from '@material-ui/core/colors';
 import { Fireworks } from 'fireworks/lib/react';
 import * as React from 'react';
+import isEqual from 'react-fast-compare';
 
-import { isDefined } from '../common';
+import { isDefined, noop } from '../common';
 import { StateBoard, StateTile } from '../protocol';
 import { TeamHue, teamSpecs } from '../teams';
 import { AspectDiv } from './aspectDiv';
@@ -85,20 +86,37 @@ const useTileStyles = makeStyles((theme: Theme) =>
     })
 );
 
+const fireworksProps = {
+    interval: 0,
+    colors: [red[700], orange[800], grey[500]],
+    x: 0,
+    y: 0,
+};
+
 interface TileProps {
+    row: number;
+    col: number;
+    onClick: (row: number, col: number) => void;
     tile: StateTile;
-    onClick: () => void;
     spymaster: boolean;
     myTurn: boolean;
     winner: boolean;
 }
 
-const Tile = ({ tile, onClick, spymaster, myTurn, winner }: TileProps) => {
+const Tile = React.memo(function Tile({ row, col, onClick, tile, spymaster, myTurn, winner }: TileProps) {
     const classes = useTileStyles();
 
     const bombRevealed = !!(tile.revealed && tile.view?.bomb);
     const alreadyExploded = React.useRef(bombRevealed);
     const explode = bombRevealed && !alreadyExploded.current;
+    const disabled = spymaster || !myTurn || winner || tile.revealed;
+
+    const reveal = React.useMemo(() => {
+        if (disabled) {
+            return noop;
+        }
+        return () => onClick(row, col);
+    }, [disabled, row, col, onClick]);
 
     return (
         <AspectDiv aspectRatio="75%">
@@ -106,9 +124,9 @@ const Tile = ({ tile, onClick, spymaster, myTurn, winner }: TileProps) => {
                 type="button"
                 variant="contained"
                 className={classes.button}
-                onClick={onClick}
+                onClick={reveal}
                 style={tileStyle(tile, spymaster)}
-                disabled={spymaster || !myTurn || winner || tile.revealed}
+                disabled={disabled}
             >
                 <Typography variant="h6" className={classes.typo}>
                     {tile.word}
@@ -117,20 +135,13 @@ const Tile = ({ tile, onClick, spymaster, myTurn, winner }: TileProps) => {
             {explode ? (
                 <div className={classes.explosionWrapper}>
                     <div className={classes.explosion}>
-                        <Fireworks
-                            {...{
-                                interval: 0,
-                                colors: [red[700], orange[800], grey[500]],
-                                x: 0,
-                                y: 0,
-                            }}
-                        />
+                        <Fireworks {...fireworksProps} />
                     </div>
                 </div>
             ) : null}
         </AspectDiv>
     );
-};
+}, isEqual);
 
 export interface BoardProps {
     words: StateBoard;
@@ -154,7 +165,7 @@ const useStyles = makeStyles((theme: Theme) =>
     })
 );
 
-export const Board = (props: BoardProps) => {
+export const Board = React.memo(function Board(props: BoardProps) {
     const classes = useStyles(props);
 
     return (
@@ -163,8 +174,10 @@ export const Board = (props: BoardProps) => {
                 arr.map((tile, col) => (
                     <div key={row * props.words.length + col}>
                         <Tile
+                            row={row}
+                            col={col}
+                            onClick={props.onClick}
                             tile={tile}
-                            onClick={() => props.onClick(row, col)}
                             spymaster={props.spymaster}
                             myTurn={props.myTurn}
                             winner={props.winner}
@@ -174,4 +187,4 @@ export const Board = (props: BoardProps) => {
             )}
         </div>
     );
-};
+}, isEqual);

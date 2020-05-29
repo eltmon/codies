@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { v4 } from 'uuid';
 
 export interface ServerTime {
     setOffset: (v: number) => void;
@@ -15,4 +16,10 @@ export const ServerTimeProvider = (props: React.PropsWithChildren<{}>) => {
 
 export function useServerTime() {
     return React.useContext(Context);
+}
+
+export function useStableUUID(): string {
+    const id = React.useRef<string | undefined>();
+    id.current = id.current ?? v4();
+    return id.current;
 }
