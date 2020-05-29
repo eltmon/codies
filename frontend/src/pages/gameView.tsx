@@ -73,7 +73,13 @@ const useCenterStyles = makeStyles((_theme: Theme) =>
     })
 );
 
-const CenterText = ({ winner, timer, turn }: State) => {
+interface CenterTextProps {
+    winner: number | undefined | null;
+    timer: StateTimer | undefined | null;
+    turn: number;
+}
+
+const CenterText = ({ winner, timer, turn }: DeepReadonly<CenterTextProps>) => {
     const classes = useCenterStyles();
     const [countdown, setCountdown] = React.useState<number | undefined>();
     const { now } = useServerTime();
@@ -135,21 +141,37 @@ const CenterText = ({ winner, timer, turn }: State) => {
     );
 };
 
-const Header = ({ send, state, pState, pTeam }: GameViewProps) => {
-    const myTurn = state.turn === pTeam;
+interface HeaderProps {
+    send: Sender;
+    myTurn: boolean;
+    winner: number | undefined | null;
+    spymaster: boolean;
+    turn: number;
+    wordsLeft: number[];
+    timer: StateTimer | undefined | null;
+}
 
+const Header = React.memo(function Header({
+    send,
+    myTurn,
+    winner,
+    spymaster,
+    turn,
+    wordsLeft,
+    timer,
+}: DeepReadonly<HeaderProps>) {
     return (
         <Grid container direction="row" justify="space-between" alignItems="center" spacing={2}>
             <Grid item xs style={{ textAlign: 'left' }}>
                 <h1>
-                    {state.wordsLeft.map((n, team) => {
+                    {wordsLeft.map((n, team) => {
                         return (
                             <span key={team}>
                                 {team !== 0 ? <span> - </span> : null}
                                 <span
                                     style={{
                                         color: teamSpecs[team].hue[600],
-                                        fontWeight: state.turn === team ? 'bold' : undefined,
+                                        fontWeight: turn === team ? 'bold' : undefined,
                                     }}
                                 >
                                     {n}
@@ -160,21 +182,22 @@ const Header = ({ send, state, pState, pTeam }: GameViewProps) => {
                 </h1>
             </Grid>
             <Grid item xs style={{ textAlign: 'center' }}>
-                <CenterText {...state} />
+                <CenterText winner={winner} timer={timer} turn={turn} />
             </Grid>
             <Grid item xs style={{ textAlign: 'right' }}>
                 <Button
                     type="button"
                     variant="outlined"
-                    onClick={() => myTurn && !pState.spymaster && send.endTurn()}
-                    disabled={!myTurn || pState.spymaster || isDefined(state.winner)}
+                    onClick={() => myTurn && !spymaster && send.endTurn()}
+                    disabled={!myTurn || spymaster || isDefined(winner)}
                 >
                     End turn
                 </Button>
             </Grid>
         </Grid>
     );
-};
+},
+isEqual);
 
 const sliderMarks = range(30, 301, 30).map((v) => ({ value: v }));
 
@@ -333,52 +356,21 @@ const ChangeNicknameButton = ({ send }: { send: Sender }) => {
     );
 };
 
-const useSidebarStyles = makeStyles((_theme: Theme) =>
-    createStyles({
-        dropzone: {
-            backgroundColor: 'initial',
-        },
-        previewGrid: {
-            width: '100%',
-        },
-    })
-);
-
-interface SidebarProps {
+interface SidebarTeamsProps {
     send: Sender;
     teams: StateTeams;
-    lists: StateWordList[];
     pTeam: number;
     playerID: string;
-    version: number;
-    timer: StateTimer | undefined | null;
 }
 
-const Sidebar = React.memo(function Sidebar({
+const SidebarTeams = React.memo(function SidebarTeams({
     send,
     teams,
-    lists,
     pTeam,
     playerID,
-    version,
-    timer,
-}: DeepReadonly<SidebarProps>) {
-    const classes = useSidebarStyles();
+}: DeepReadonly<SidebarTeamsProps>) {
     const theme = useTheme();
     const nameShade = theme.palette.type === 'dark' ? 400 : 600;
-
-    const wordCount = React.useMemo(
-        () =>
-            lists.reduce((curr, l) => {
-                if (l.enabled) {
-                    return curr + l.count;
-                }
-                return curr;
-            }, 0),
-        [lists]
-    );
-
-    const [uploadOpen, setUploadOpen] = React.useState(false);
 
     return (
         <>
@@ -436,7 +428,45 @@ const Sidebar = React.memo(function Sidebar({
                 </Button>
                 <ChangeNicknameButton send={send} />
             </Paper>
+        </>
+    );
+},
+isEqual);
 
+const useSidebarPacksStyles = makeStyles((_theme: Theme) =>
+    createStyles({
+        dropzone: {
+            backgroundColor: 'initial',
+        },
+        previewGrid: {
+            width: '100%',
+        },
+    })
+);
+
+interface SidebarPacksProps {
+    send: Sender;
+    lists: StateWordList[];
+}
+
+const SidebarPacks = React.memo(function SidebarPacks({ send, lists }: DeepReadonly<SidebarPacksProps>) {
+    const classes = useSidebarPacksStyles();
+
+    const wordCount = React.useMemo(
+        () =>
+            lists.reduce((curr, l) => {
+                if (l.enabled) {
+                    return curr + l.count;
+                }
+                return curr;
+            }, 0),
+        [lists]
+    );
+
+    const [uploadOpen, setUploadOpen] = React.useState(false);
+
+    return (
+        <>
             <h2>Packs</h2>
             <p style={{ fontStyle: 'italic' }}>{wordCount} words in the selected packs.</p>
             <div style={{ display: 'grid', gridGap: '0.5rem' }}>
@@ -508,27 +538,31 @@ const Sidebar = React.memo(function Sidebar({
                     </>
                 )}
             </div>
+        </>
+    );
+}, isEqual);
+
+interface SidebarProps {
+    send: Sender;
+    teams: StateTeams;
+    lists: StateWordList[];
+    pTeam: number;
+    playerID: string;
+    version: number;
+    timer: StateTimer | undefined | null;
+}
+
+const Sidebar = ({ send, teams, lists, pTeam, playerID, version, timer }: DeepReadonly<SidebarProps>) => {
+    return (
+        <>
+            <SidebarTeams send={send} teams={teams} pTeam={pTeam} playerID={playerID} />
+            <SidebarPacks send={send} lists={lists} />
             {!isDefined(timer) ? null : (
                 <div style={{ textAlign: 'left', marginTop: '1rem' }}>
                     <TimerSlider version={version} timer={timer} onCommit={send.changeTurnTime} />
                 </div>
             )}
         </>
-    );
-},
-isEqual);
-
-const Board2 = ({ send, state, pState, pTeam }: GameViewProps) => {
-    const myTurn = state.turn === pTeam;
-
-    return (
-        <Board
-            words={state.board}
-            onClick={send.reveal}
-            spymaster={pState.spymaster}
-            myTurn={myTurn}
-            winner={isDefined(state.winner)}
-        />
     );
 };
 
@@ -560,7 +594,7 @@ interface FooterProps {
     hasTimer: boolean;
 }
 
-const Footer = React.memo(function Footer({ send, end, spymaster, hideBomb, hasTimer }: FooterProps) {
+const Footer = React.memo(function Footer({ send, end, spymaster, hideBomb, hasTimer }: DeepReadonly<FooterProps>) {
     const classes = useFooterStyles();
 
     return (
@@ -636,6 +670,39 @@ const Footer = React.memo(function Footer({ send, end, spymaster, hideBomb, hasT
     );
 }, isEqual);
 
+const useCornerButtonsStyle = makeStyles((_theme: Theme) =>
+    createStyles({
+        wrapper: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            margin: '0.5rem',
+        },
+        button: {
+            marginRight: '0.5rem',
+        },
+    })
+);
+
+const CornerButtons = React.memo(function CornerButtons({ roomID, leave }: { roomID: string; leave: () => void }) {
+    const classes = useCornerButtonsStyle();
+
+    return (
+        <>
+            <div className={classes.wrapper}>
+                <Button type="button" onClick={leave} startIcon={<ArrowBack />} className={classes.button}>
+                    Leave
+                </Button>
+                <ClipboardButton
+                    buttonText="Copy Room URL"
+                    toCopy={`${window.location.origin}/?roomID=${roomID}`}
+                    icon={<Link />}
+                />
+            </div>
+        </>
+    );
+});
+
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -675,15 +742,6 @@ const useStyles = makeStyles((theme: Theme) =>
         sidebar: {
             gridArea: 'sidebar',
         },
-        leaveWrapper: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            margin: '0.5rem',
-        },
-        leaveButton: {
-            marginRight: '0.5rem',
-        },
     })
 );
 
@@ -696,47 +754,53 @@ export interface GameViewProps {
     pTeam: number;
 }
 
-export const GameView = (props: DeepReadonly<GameViewProps>) => {
+export const GameView = ({ roomID, leave, send, state, pState, pTeam }: DeepReadonly<GameViewProps>) => {
     const classes = useStyles();
-    const end = isDefined(props.state.winner);
+    const end = isDefined(state.winner);
+    const myTurn = state.turn === pTeam;
 
     return (
         <div className={classes.root}>
-            <div className={classes.leaveWrapper}>
-                <Button type="button" onClick={props.leave} startIcon={<ArrowBack />} className={classes.leaveButton}>
-                    Leave
-                </Button>
-                <ClipboardButton
-                    buttonText="Copy Room URL"
-                    toCopy={`${window.location.origin}/?roomID=${props.roomID}`}
-                    icon={<Link />}
-                />
-            </div>
+            <CornerButtons roomID={roomID} leave={leave} />
             <div className={classes.wrapper}>
                 <div className={classes.header}>
-                    <Header {...props} />
+                    <Header
+                        send={send}
+                        myTurn={myTurn}
+                        winner={state.winner}
+                        spymaster={pState.spymaster}
+                        turn={state.turn}
+                        wordsLeft={state.wordsLeft}
+                        timer={state.timer}
+                    />
                 </div>
                 <div className={classes.board}>
-                    <Board2 {...props} />
+                    <Board
+                        words={state.board}
+                        onClick={send.reveal}
+                        spymaster={pState.spymaster}
+                        myTurn={myTurn}
+                        winner={end}
+                    />
                 </div>
                 <div className={classes.footer}>
                     <Footer
-                        send={props.send}
+                        send={send}
                         end={end}
-                        spymaster={props.pState.spymaster}
-                        hideBomb={props.state.hideBomb}
-                        hasTimer={isDefined(props.state.timer)}
+                        spymaster={pState.spymaster}
+                        hideBomb={state.hideBomb}
+                        hasTimer={isDefined(state.timer)}
                     />
                 </div>
                 <div className={classes.sidebar}>
                     <Sidebar
-                        send={props.send}
-                        teams={props.state.teams}
-                        lists={props.state.lists}
-                        pTeam={props.pTeam}
-                        playerID={props.pState.playerID}
-                        version={props.state.version}
-                        timer={props.state.timer}
+                        send={send}
+                        teams={state.teams}
+                        lists={state.lists}
+                        pTeam={pTeam}
+                        playerID={pState.playerID}
+                        version={state.version}
+                        timer={state.timer}
                     />
                 </div>
             </div>

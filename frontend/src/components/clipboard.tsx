@@ -1,6 +1,7 @@
 import { Button, Tooltip } from '@material-ui/core';
 import copy from 'clipboard-copy';
 import * as React from 'react';
+import isEqual from 'react-fast-compare';
 
 export interface ClipboardButtonProps {
     buttonText: string;
@@ -8,7 +9,7 @@ export interface ClipboardButtonProps {
     icon: React.ReactNode;
 }
 
-export const ClipboardButton = (props: ClipboardButtonProps) => {
+export const ClipboardButton = React.memo(function ClipboardButton(props: ClipboardButtonProps) {
     const [showTooltip, setShowTooltip] = React.useState(false);
 
     return (
@@ -30,4 +31,4 @@ export const ClipboardButton = (props: ClipboardButtonProps) => {
             </Button>
         </Tooltip>
     );
-};
+}, isEqual);
