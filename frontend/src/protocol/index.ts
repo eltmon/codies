@@ -123,6 +123,14 @@ const StateTimer = myzod.object({
     turnEnd: myzod.date(),
 });
 
+export type StateWordList = DeepReadonly<Infer<typeof StateWordList>>;
+const StateWordList = myzod.object({
+    name: myzod.string(),
+    count: myzod.number(),
+    custom: myzod.boolean(),
+    enabled: myzod.boolean(),
+});
+
 export type State = DeepReadonly<Infer<typeof State>>;
 export const State = myzod.object({
     version: myzod.number(),
@@ -131,14 +139,7 @@ export const State = myzod.object({
     winner: myzod.number().optional().nullable(),
     board: StateBoard,
     wordsLeft: myzod.array(myzod.number()),
-    lists: myzod.array(
-        myzod.object({
-            name: myzod.string(),
-            count: myzod.number(),
-            custom: myzod.boolean(),
-            enabled: myzod.boolean(),
-        })
-    ),
+    lists: myzod.array(StateWordList),
     timer: StateTimer.optional().nullable(),
     hideBomb: myzod.boolean(),
 });

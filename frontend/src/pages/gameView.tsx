@@ -33,13 +33,15 @@ import isArray from 'lodash/isArray';
 import range from 'lodash/range';
 import { DropzoneDialog } from 'material-ui-dropzone';
 import * as React from 'react';
+import isEqual from 'react-fast-compare';
 import { Controller, useForm } from 'react-hook-form';
+import { DeepReadonly } from 'ts-essentials';
 
 import { isDefined, nameofFactory, noComplete } from '../common';
 import { Board } from '../components/board';
 import { ClipboardButton } from '../components/clipboard';
 import { useServerTime } from '../hooks';
-import { State, StatePlayer, StateTimer, WordPack } from '../protocol';
+import { State, StatePlayer, StateTeams, StateTimer, StateWordList, WordPack } from '../protocol';
 import { teamSpecs } from '../teams';
 
 export interface Sender {
@@ -56,15 +58,6 @@ export interface Sender {
     addPacks: (packs: { name: string; words: string[] }[]) => void;
     removePack: (num: number) => void;
     changeHideBomb: (HideBomb: boolean) => void;
-}
-
-export interface GameViewProps {
-    roomID: string;
-    leave: () => void;
-    send: Sender;
-    state: State;
-    pState: StatePlayer;
-    pTeam: number;
 }
 
 const useCenterStyles = makeStyles((_theme: Theme) =>
@@ -351,13 +344,28 @@ const useSidebarStyles = makeStyles((_theme: Theme) =>
     })
 );
 
-const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
+interface SidebarProps {
+    send: Sender;
+    teams: StateTeams;
+    lists: StateWordList[];
+    pTeam: number;
+    playerID: string;
+    version: number;
+    timer: StateTimer | undefined | null;
+}
+
+const Sidebar = React.memo(function Sidebar({
+    send,
+    teams,
+    lists,
+    pTeam,
+    playerID,
+    version,
+    timer,
+}: DeepReadonly<SidebarProps>) {
     const classes = useSidebarStyles();
     const theme = useTheme();
     const nameShade = theme.palette.type === 'dark' ? 400 : 600;
-
-    const teams = state.teams;
-    const lists = state.lists;
 
     const wordCount = React.useMemo(
         () =>
@@ -408,7 +416,7 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                                         gridRow: j + 2,
                                         gridColumn: i + 1,
                                         color: teamSpecs[i].hue[nameShade],
-                                        fontStyle: member.playerID === pState.playerID ? 'italic' : undefined,
+                                        fontStyle: member.playerID === playerID ? 'italic' : undefined,
                                     }}
                                 >
                                     {member.spymaster ? `[${member.nickname}]` : member.nickname}
@@ -500,14 +508,15 @@ const Sidebar = ({ send, state, pState, pTeam }: GameViewProps) => {
                     </>
                 )}
             </div>
-            {!isDefined(state.timer) ? null : (
+            {!isDefined(timer) ? null : (
                 <div style={{ textAlign: 'left', marginTop: '1rem' }}>
-                    <TimerSlider version={state.version} timer={state.timer} onCommit={send.changeTurnTime} />
+                    <TimerSlider version={version} timer={timer} onCommit={send.changeTurnTime} />
                 </div>
             )}
         </>
     );
-};
+},
+isEqual);
 
 const Board2 = ({ send, state, pState, pTeam }: GameViewProps) => {
     const myTurn = state.turn === pTeam;
@@ -523,16 +532,44 @@ const Board2 = ({ send, state, pState, pTeam }: GameViewProps) => {
     );
 };
 
-const Footer = ({ send, state, pState }: GameViewProps) => {
-    const end = isDefined(state.winner);
+const useFooterStyles = makeStyles((_theme: Theme) =>
+    createStyles({
+        root: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignContent: 'flex-start',
+            flexWrap: 'wrap',
+        },
+        left: {
+            display: 'flex',
+            alignContent: 'flex-start',
+            flexWrap: 'wrap',
+        },
+        leftButton: {
+            marginBottom: '0.5rem',
+            marginRight: '0.5rem',
+        },
+    })
+);
+
+interface FooterProps {
+    send: Sender;
+    end: boolean;
+    spymaster: boolean;
+    hideBomb: boolean;
+    hasTimer: boolean;
+}
+
+const Footer = React.memo(function Footer({ send, end, spymaster, hideBomb, hasTimer }: FooterProps) {
+    const classes = useFooterStyles();
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignContent: 'flex-start', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignContent: 'flex-start', flexWrap: 'wrap' }}>
-                <ButtonGroup variant="outlined" style={{ marginBottom: '0.5rem', marginRight: '0.5rem' }}>
+        <div className={classes.root}>
+            <div className={classes.left}>
+                <ButtonGroup variant="outlined" className={classes.leftButton}>
                     <Button
                         type="button"
-                        variant={pState.spymaster ? undefined : 'contained'}
+                        variant={spymaster ? undefined : 'contained'}
                         onClick={() => send.changeRole(false)}
                         startIcon={<Search />}
                         disabled={end}
@@ -541,7 +578,7 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
                     </Button>
                     <Button
                         type="button"
-                        variant={pState.spymaster ? 'contained' : undefined}
+                        variant={spymaster ? 'contained' : undefined}
                         onClick={() => send.changeRole(true)}
                         startIcon={<Person />}
                         disabled={end}
@@ -549,10 +586,10 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
                         Spymaster
                     </Button>
                 </ButtonGroup>
-                <ButtonGroup variant="outlined" style={{ marginBottom: '0.5rem', marginRight: '0.5rem' }}>
+                <ButtonGroup variant="outlined" className={classes.leftButton}>
                     <Button
                         type="button"
-                        variant={state.hideBomb ? undefined : 'contained'}
+                        variant={hideBomb ? undefined : 'contained'}
                         onClick={() => send.changeHideBomb(false)}
                         startIcon={<Visibility />}
                     >
@@ -560,24 +597,24 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
                     </Button>
                     <Button
                         type="button"
-                        variant={state.hideBomb ? 'contained' : undefined}
+                        variant={hideBomb ? 'contained' : undefined}
                         onClick={() => send.changeHideBomb(true)}
                         startIcon={<VisibilityOff />}
                     >
                         Hide bomb
                     </Button>
                 </ButtonGroup>
-                <ButtonGroup variant="outlined" style={{ marginBottom: '0.5rem', marginRight: '0.5rem' }}>
+                <ButtonGroup variant="outlined" className={classes.leftButton}>
                     <Button
                         type="button"
-                        variant={isDefined(state.timer) ? undefined : 'contained'}
+                        variant={hasTimer ? undefined : 'contained'}
                         onClick={() => send.changeTurnMode(false)}
                     >
                         <TimerOff />
                     </Button>
                     <Button
                         type="button"
-                        variant={isDefined(state.timer) ? 'contained' : undefined}
+                        variant={hasTimer ? 'contained' : undefined}
                         onClick={() => send.changeTurnMode(true)}
                     >
                         <Timer />
@@ -597,7 +634,7 @@ const Footer = ({ send, state, pState }: GameViewProps) => {
             </div>
         </div>
     );
-};
+}, isEqual);
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -650,8 +687,18 @@ const useStyles = makeStyles((theme: Theme) =>
     })
 );
 
-export const GameView = (props: GameViewProps) => {
+export interface GameViewProps {
+    roomID: string;
+    leave: () => void;
+    send: Sender;
+    state: State;
+    pState: StatePlayer;
+    pTeam: number;
+}
+
+export const GameView = (props: DeepReadonly<GameViewProps>) => {
     const classes = useStyles();
+    const end = isDefined(props.state.winner);
 
     return (
         <div className={classes.root}>
@@ -673,10 +720,24 @@ export const GameView = (props: GameViewProps) => {
                     <Board2 {...props} />
                 </div>
                 <div className={classes.footer}>
-                    <Footer {...props} />
+                    <Footer
+                        send={props.send}
+                        end={end}
+                        spymaster={props.pState.spymaster}
+                        hideBomb={props.state.hideBomb}
+                        hasTimer={isDefined(props.state.timer)}
+                    />
                 </div>
                 <div className={classes.sidebar}>
-                    <Sidebar {...props} />
+                    <Sidebar
+                        send={props.send}
+                        teams={props.state.teams}
+                        lists={props.state.lists}
+                        pTeam={props.pTeam}
+                        playerID={props.pState.playerID}
+                        version={props.state.version}
+                        timer={props.state.timer}
+                    />
                 </div>
             </div>
         </div>
