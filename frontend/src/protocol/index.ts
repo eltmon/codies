@@ -11,69 +11,71 @@ const WordPack = myzod.object({
     words: myzod.array(myzod.string()),
 });
 
+export type PartialClientNote = Infer<typeof PartialClientNote>;
+export type PartialClientNoteSender = (r: PartialClientNote) => void;
+const PartialClientNote = myzod.union([
+    myzod.object({
+        method: myzod.literal('newGame'),
+        params: myzod.object({}),
+    }),
+    myzod.object({
+        method: myzod.literal('endTurn'),
+        params: myzod.object({}),
+    }),
+    myzod.object({
+        method: myzod.literal('randomizeTeams'),
+        params: myzod.object({}),
+    }),
+    myzod.object({
+        method: myzod.literal('reveal'),
+        params: myzod.object({ row: myzod.number(), col: myzod.number() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changeTeam'),
+        params: myzod.object({ team: myzod.number() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changeNickname'),
+        params: myzod.object({ nickname: myzod.string() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changeRole'),
+        params: myzod.object({ spymaster: myzod.boolean() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changePack'),
+        params: myzod.object({ num: myzod.number(), enable: myzod.boolean() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changeTurnMode'),
+        params: myzod.object({ timed: myzod.boolean() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changeTurnTime'),
+        params: myzod.object({ seconds: myzod.number() }),
+    }),
+    myzod.object({
+        method: myzod.literal('addPacks'),
+        params: myzod.object({
+            packs: myzod.array(WordPack),
+        }),
+    }),
+    myzod.object({
+        method: myzod.literal('removePack'),
+        params: myzod.object({ num: myzod.number() }),
+    }),
+    myzod.object({
+        method: myzod.literal('changeHideBomb'),
+        params: myzod.object({ hideBomb: myzod.boolean() }),
+    }),
+]);
+
 export type ClientNote = Infer<typeof ClientNote>;
 export const ClientNote = myzod
     .object({
         version: myzod.number(),
     })
-    .and(
-        myzod.union([
-            myzod.object({
-                method: myzod.literal('newGame'),
-                params: myzod.object({}),
-            }),
-            myzod.object({
-                method: myzod.literal('endTurn'),
-                params: myzod.object({}),
-            }),
-            myzod.object({
-                method: myzod.literal('randomizeTeams'),
-                params: myzod.object({}),
-            }),
-            myzod.object({
-                method: myzod.literal('reveal'),
-                params: myzod.object({ row: myzod.number(), col: myzod.number() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changeTeam'),
-                params: myzod.object({ team: myzod.number() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changeNickname'),
-                params: myzod.object({ nickname: myzod.string() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changeRole'),
-                params: myzod.object({ spymaster: myzod.boolean() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changePack'),
-                params: myzod.object({ num: myzod.number(), enable: myzod.boolean() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changeTurnMode'),
-                params: myzod.object({ timed: myzod.boolean() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changeTurnTime'),
-                params: myzod.object({ seconds: myzod.number() }),
-            }),
-            myzod.object({
-                method: myzod.literal('addPacks'),
-                params: myzod.object({
-                    packs: myzod.array(WordPack),
-                }),
-            }),
-            myzod.object({
-                method: myzod.literal('removePack'),
-                params: myzod.object({ num: myzod.number() }),
-            }),
-            myzod.object({
-                method: myzod.literal('changeHideBomb'),
-                params: myzod.object({ hideBomb: myzod.boolean() }),
-            }),
-        ])
-    );
+    .and(PartialClientNote);
 
 // Messages sent from server to client.
 

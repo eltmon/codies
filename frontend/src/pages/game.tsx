@@ -5,41 +5,38 @@ import { v4 } from 'uuid';
 
 import { assertIsDefined, assertNever, noop, reloadOutdatedPage, websocketUrl } from '../common';
 import { useServerTime } from '../hooks/useServerTime';
-import { version } from '../metadata.json';
-import { ClientNote, ServerNote, State, StatePlayer, TimeResponse, WordPack } from '../protocol';
+import { version as codiesVersion } from '../metadata.json';
+import { ClientNote, PartialClientNote, ServerNote, State, StatePlayer, TimeResponse, WordPack } from '../protocol';
 import { GameView, Sender } from './gameView';
 import { Loading } from './loading';
 
 const socketUrl = websocketUrl('/api/ws');
 
-function useSender(sendNote: (r: ClientNote) => void, version: number): Sender {
+function useSender(dispatch: (action: PartialClientNote) => void): Sender {
     return React.useMemo<Sender>(() => {
         return {
             reveal: (row: number, col: number) =>
-                sendNote({
+                dispatch({
                     method: 'reveal',
-                    version,
                     params: {
                         row,
                         col,
                     },
                 }),
-            newGame: () => sendNote({ method: 'newGame', version, params: {} }),
-            endTurn: () => sendNote({ method: 'endTurn', version, params: {} }),
-            changeNickname: (nickname: string) => sendNote({ method: 'changeNickname', version, params: { nickname } }),
-            changeRole: (spymaster: boolean) => sendNote({ method: 'changeRole', version, params: { spymaster } }),
-            changeTeam: (team: number) => sendNote({ method: 'changeTeam', version, params: { team } }),
-            randomizeTeams: () => sendNote({ method: 'randomizeTeams', version, params: {} }),
-            changePack: (num: number, enable: boolean) =>
-                sendNote({ method: 'changePack', version, params: { num, enable } }),
-            changeTurnMode: (timed: boolean) => sendNote({ method: 'changeTurnMode', version, params: { timed } }),
-            changeTurnTime: (seconds: number) => sendNote({ method: 'changeTurnTime', version, params: { seconds } }),
-            addPacks: (packs: WordPack[]) => sendNote({ method: 'addPacks', version, params: { packs } }),
-            removePack: (num: number) => sendNote({ method: 'removePack', version, params: { num } }),
-            changeHideBomb: (hideBomb: boolean) =>
-                sendNote({ method: 'changeHideBomb', version, params: { hideBomb } }),
+            newGame: () => dispatch({ method: 'newGame', params: {} }),
+            endTurn: () => dispatch({ method: 'endTurn', params: {} }),
+            changeNickname: (nickname: string) => dispatch({ method: 'changeNickname', params: { nickname } }),
+            changeRole: (spymaster: boolean) => dispatch({ method: 'changeRole', params: { spymaster } }),
+            changeTeam: (team: number) => dispatch({ method: 'changeTeam', params: { team } }),
+            randomizeTeams: () => dispatch({ method: 'randomizeTeams', params: {} }),
+            changePack: (num: number, enable: boolean) => dispatch({ method: 'changePack', params: { num, enable } }),
+            changeTurnMode: (timed: boolean) => dispatch({ method: 'changeTurnMode', params: { timed } }),
+            changeTurnTime: (seconds: number) => dispatch({ method: 'changeTurnTime', params: { seconds } }),
+            addPacks: (packs: WordPack[]) => dispatch({ method: 'addPacks', params: { packs } }),
+            removePack: (num: number) => dispatch({ method: 'removePack', params: { num } }),
+            changeHideBomb: (hideBomb: boolean) => dispatch({ method: 'changeHideBomb', params: { hideBomb } }),
         };
-    }, [sendNote, version]);
+    }, [dispatch]);
 }
 
 function usePlayer(playerID: string, state?: State): { pState: StatePlayer; pTeam: number } | undefined {
@@ -71,7 +68,7 @@ function useWS(roomID: string, playerID: string, nickname: string, dead: () => v
         //
         // X-CODIES-VERSION would be cleaner, but the WS hook doesn't
         // support anything but query params.
-        queryParams: { roomID: roomID, playerID: playerID, nickname: nickname, codiesVersion: version },
+        queryParams: { roomID: roomID, playerID: playerID, nickname: nickname, codiesVersion: codiesVersion },
         reconnectAttempts,
         onMessage: () => {
             retry.current = 0;
@@ -99,35 +96,77 @@ function useWS(roomID: string, playerID: string, nickname: string, dead: () => v
     });
 }
 
-function syncTime(setOffset: (offset: number) => void) {
-    const fn = async () => {
-        let bestRTT: number | undefined;
-        let offset = 0;
+function useSyncedServerTime() {
+    const { setOffset } = useServerTime();
 
-        for (let i = 0; i < 3; i++) {
-            const before = Date.now();
-            const resp = await fetch('/api/time');
-            const after = Date.now();
+    const syncTime = React.useCallback(() => {
+        const fn = async () => {
+            let bestRTT: number | undefined;
+            let offset = 0;
 
-            const body = await resp.json();
-            if (resp.ok) {
-                const rtt = (after - before) / 2;
+            for (let i = 0; i < 3; i++) {
+                const before = Date.now();
+                const resp = await fetch('/api/time');
+                const after = Date.now();
 
-                if (bestRTT !== undefined && rtt > bestRTT) {
-                    continue;
+                const body = await resp.json();
+                if (resp.ok) {
+                    const rtt = (after - before) / 2;
+
+                    if (bestRTT !== undefined && rtt > bestRTT) {
+                        continue;
+                    }
+
+                    bestRTT = rtt;
+
+                    const t = TimeResponse.parse(body);
+                    const serverTime = t.time.getTime() + rtt;
+                    offset = serverTime - Date.now();
                 }
-
-                bestRTT = rtt;
-
-                const t = TimeResponse.parse(body);
-                const serverTime = t.time.getTime() + rtt;
-                offset = serverTime - Date.now();
             }
-        }
 
-        setOffset(offset);
-    };
-    fn().catch(noop);
+            setOffset(offset);
+        };
+        fn().catch(noop);
+    }, [setOffset]);
+
+    React.useEffect(() => {
+        const interval = window.setInterval(() => {
+            syncTime();
+        }, 10 * 60 * 1000);
+        return () => window.clearInterval(interval);
+    }, [syncTime]);
+
+    return syncTime;
+}
+
+type StateAction = { method: 'setState'; state: State } | PartialClientNote;
+
+function useStateReducer(sendNote: (r: ClientNote) => void) {
+    // TODO: Create a new state which contains the server state.
+    // TODO: Put sendNote in the state instead of reffing it?
+    const sendNoteRef = React.useRef(sendNote);
+    sendNoteRef.current = sendNote;
+
+    return React.useCallback(
+        (state: State | undefined, action: StateAction): State | undefined => {
+            if (state === undefined) {
+                if (action.method === 'setState') {
+                    return action.state;
+                }
+                return state;
+            }
+
+            switch (action.method) {
+                case 'setState':
+                    return action.state;
+                default:
+                    sendNoteRef.current({ ...action, version: state.version });
+                    return state;
+            }
+        },
+        [sendNoteRef]
+    );
 }
 
 export interface GameProps {
@@ -139,21 +178,13 @@ export interface GameProps {
 export const Game = (props: GameProps) => {
     const [playerID] = React.useState(v4);
     const nickname = React.useRef(props.nickname); // Preserve a nickname for use in reconnects.
-    const [state, setState] = React.useState<State | undefined>();
-    const { setOffset } = useServerTime();
 
-    const { sendJsonMessage, lastJsonMessage } = useWS(props.roomID, playerID, nickname.current, props.leave, () =>
-        syncTime(setOffset)
-    );
+    const syncTime = useSyncedServerTime();
+    const { sendJsonMessage, lastJsonMessage } = useWS(props.roomID, playerID, nickname.current, props.leave, syncTime);
 
-    React.useEffect(() => {
-        const interval = window.setInterval(() => {
-            syncTime(setOffset);
-        }, 10 * 60 * 1000);
-        return () => window.clearInterval(interval);
-    }, [setOffset]);
-
-    const send = useSender(sendJsonMessage, state?.version ?? 0);
+    const reducer = useStateReducer(sendJsonMessage);
+    const [state, dispatch] = React.useReducer(reducer, undefined);
+    const send = useSender(dispatch);
 
     React.useEffect(() => {
         if (!lastJsonMessage) {
@@ -164,7 +195,7 @@ export const Game = (props: GameProps) => {
 
         switch (note.method) {
             case 'state':
-                setState(note.params);
+                dispatch({ method: 'setState', state: note.params });
                 break;
             default:
                 assertNever(note.method);
