@@ -52,12 +52,13 @@ func main() {
 	log.Printf("starting codies server, version %s", version.Version())
 
 	wsOpts = &websocket.AcceptOptions{
-		OriginPatterns: args.Origins,
+		OriginPatterns:  args.Origins,
+		CompressionMode: websocket.CompressionContextTakeover,
 	}
 
 	if args.Debug {
 		log.Println("starting in debug mode, allowing any WebSocket origin host")
-		wsOpts.OriginPatterns = []string{"*"}
+		wsOpts.InsecureSkipVerify = true
 	} else {
 		if !version.VersionSet() {
 			log.Fatal("running production build without version set")
