@@ -17,6 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tomwright/queryparam/v4"
 	"github.com/zikaeroh/codies/internal/protocol"
+	"github.com/zikaeroh/codies/internal/responder"
 	"github.com/zikaeroh/codies/internal/server"
 	"github.com/zikaeroh/codies/internal/version"
 	"golang.org/x/sync/errgroup"
@@ -83,19 +84,18 @@ func main() {
 		r.Use(middleware.NoCache)
 
 		r.Get("/api/time", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(&protocol.TimeResponse{Time: time.Now()})
+			responder.Respond(w, responder.Body(&protocol.TimeResponse{Time: time.Now()}))
 		})
 
 		r.Get("/api/stats", func(w http.ResponseWriter, r *http.Request) {
 			rooms, clients := srv.Stats()
-
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "    ")
-			_ = enc.Encode(&protocol.StatsResponse{
-				Rooms:   rooms,
-				Clients: clients,
-			})
+			responder.Respond(w,
+				responder.Body(&protocol.StatsResponse{
+					Rooms:   rooms,
+					Clients: clients,
+				}),
+				responder.Pretty(true),
+			)
 		})
 
 		r.Group(func(r chi.Router) {
@@ -106,18 +106,16 @@ func main() {
 			r.Get("/api/exists", func(w http.ResponseWriter, r *http.Request) {
 				query := &protocol.ExistsQuery{}
 				if err := queryparam.Parse(r.URL.Query(), query); err != nil {
-					httpErr(w, http.StatusBadRequest)
+					responder.Respond(w, responder.Status(http.StatusBadRequest))
 					return
 				}
 
 				room := srv.FindRoomByID(query.RoomID)
 				if room == nil {
-					w.WriteHeader(http.StatusNotFound)
+					responder.Respond(w, responder.Status(http.StatusNotFound))
 				} else {
-					w.WriteHeader(http.StatusOK)
+					responder.Respond(w, responder.Status(http.StatusOK))
 				}
-
-				_, _ = w.Write([]byte("."))
 			})
 
 			r.Post("/api/room", func(w http.ResponseWriter, r *http.Request) {
@@ -125,76 +123,88 @@ func main() {
 
 				req := &protocol.RoomRequest{}
 				if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-					httpErr(w, http.StatusBadRequest)
+					responder.Respond(w, responder.Status(http.StatusBadRequest))
 					return
 				}
-
-				w.Header().Add("Content-Type", "application/json")
 
 				if msg, valid := req.Valid(); !valid {
-					resp := &protocol.RoomResponse{
-						Error: stringPtr(msg),
-					}
-					w.WriteHeader(http.StatusBadRequest)
-					_ = json.NewEncoder(w).Encode(resp)
+					responder.Respond(w,
+						responder.Status(http.StatusBadRequest),
+						responder.Body(&protocol.RoomResponse{
+							Error: stringPtr(msg),
+						}),
+					)
 					return
 				}
 
-				resp := &protocol.RoomResponse{}
-
+				var room *server.Room
 				if req.Create {
-					room, err := srv.CreateRoom(req.RoomName, req.RoomPass)
+					var err error
+					room, err = srv.CreateRoom(req.RoomName, req.RoomPass)
 					if err != nil {
 						switch err {
 						case server.ErrRoomExists:
-							resp.Error = stringPtr("Room already exists.")
-							w.WriteHeader(http.StatusBadRequest)
+							responder.Respond(w,
+								responder.Status(http.StatusBadRequest),
+								responder.Body(&protocol.RoomResponse{
+									Error: stringPtr("Room already exists."),
+								}),
+							)
 						case server.ErrTooManyRooms:
-							resp.Error = stringPtr("Too many rooms.")
-							w.WriteHeader(http.StatusServiceUnavailable)
+							responder.Respond(w,
+								responder.Status(http.StatusServiceUnavailable),
+								responder.Body(&protocol.RoomResponse{
+									Error: stringPtr("Too many rooms."),
+								}),
+							)
 						default:
-							resp.Error = stringPtr("An unknown error occurred.")
-							w.WriteHeader(http.StatusInternalServerError)
+							responder.Respond(w,
+								responder.Status(http.StatusInternalServerError),
+								responder.Body(&protocol.RoomResponse{
+									Error: stringPtr("An unknown error occurred."),
+								}),
+							)
 						}
-					} else {
-						resp.ID = &room.ID
-						w.WriteHeader(http.StatusOK)
+						return
 					}
 				} else {
-					room := srv.FindRoom(req.RoomName)
+					room = srv.FindRoom(req.RoomName)
 					if room == nil || room.Password != req.RoomPass {
-						resp.Error = stringPtr("Room not found or password does not match.")
-						w.WriteHeader(http.StatusNotFound)
-					} else {
-						resp.ID = &room.ID
-						w.WriteHeader(http.StatusOK)
+						responder.Respond(w,
+							responder.Status(http.StatusNotFound),
+							responder.Body(&protocol.RoomResponse{
+								Error: stringPtr("Room not found or password does not match."),
+							}),
+						)
+						return
 					}
 				}
 
-				_ = json.NewEncoder(w).Encode(resp)
+				responder.Respond(w, responder.Body(&protocol.RoomResponse{
+					ID: &room.ID,
+				}))
 			})
 
 			r.Get("/api/ws", func(w http.ResponseWriter, r *http.Request) {
 				query := &protocol.WSQuery{}
 				if err := queryparam.Parse(r.URL.Query(), query); err != nil {
-					httpErr(w, http.StatusBadRequest)
+					responder.Respond(w, responder.Status(http.StatusBadRequest))
 					return
 				}
 
 				if _, valid := query.Valid(); !valid {
-					httpErr(w, http.StatusBadRequest)
+					responder.Respond(w, responder.Status(http.StatusBadRequest))
 					return
 				}
 
 				room := srv.FindRoomByID(query.RoomID)
 				if room == nil {
-					httpErr(w, http.StatusNotFound)
+					responder.Respond(w, responder.Status(http.StatusBadRequest))
 					return
 				}
 
 				c, err := websocket.Accept(w, r, wsOpts)
 				if err != nil {
-					log.Println(err)
 					return
 				}
 
@@ -258,7 +268,6 @@ func checkVersion(next http.Handler) http.Handler {
 		if r.Header.Get("Upgrade") == "websocket" {
 			c, err := websocket.Accept(w, r, wsOpts)
 			if err != nil {
-				log.Println(err)
 				return
 			}
 			c.Close(4418, reason)
