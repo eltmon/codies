@@ -3,7 +3,7 @@ module github.com/zikaeroh/codies
 go 1.14
 
 require (
-	github.com/go-chi/chi v4.1.1+incompatible
+	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
 	github.com/mailru/easyjson v0.7.1
