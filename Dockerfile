@@ -23,14 +23,15 @@ RUN go mod download
 # Manually copying the required files to make this image's cache only include Go code.
 COPY *.go ./
 COPY ./internal ./internal
+COPY --from=JS_BUILD /frontend/build ./frontend/build
+RUN go run github.com/markbates/pkger/cmd/pkger list && \
+    go run github.com/markbates/pkger/cmd/pkger -o internal/pkger
 
 ARG version
 RUN go build  -ldflags="-X github.com/zikaeroh/codies/internal/version.version=${version}" .
 
 # TODO: Use distroless/static and statically compile above. (https://golang.org/issue/26492)
 FROM gcr.io/distroless/base:nonroot
-WORKDIR /codies
-COPY --from=GO_BUILD /codies/codies ./codies
-COPY --from=JS_BUILD /frontend/build ./frontend/build
-ENTRYPOINT [ "/codies/codies", "--prod" ]
+COPY --from=GO_BUILD /codies/codies /codies
+ENTRYPOINT [ "/codies", "--prod" ]
 EXPOSE 5000

@@ -16,6 +16,7 @@ import (
 	"github.com/posener/ctxutil"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tomwright/queryparam/v4"
+	"github.com/zikaeroh/codies/internal/pkger"
 	"github.com/zikaeroh/codies/internal/protocol"
 	"github.com/zikaeroh/codies/internal/responder"
 	"github.com/zikaeroh/codies/internal/server"
@@ -230,7 +231,7 @@ func main() {
 }
 
 func staticHandler() http.Handler {
-	fs := http.Dir("./frontend/build")
+	fs := pkger.Dir("/frontend/build")
 	fsh := http.FileServer(fs)
 
 	r := chi.NewMux()

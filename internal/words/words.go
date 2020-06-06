@@ -2,6 +2,7 @@ package words
 
 import (
 	"bufio"
+	"io"
 	"strings"
 )
 
@@ -27,16 +28,17 @@ func NewList(words []string) List {
 	return newList(cleaned)
 }
 
-func NewListFromLines(s string) List {
-	s = strings.TrimSpace(s)
-	words := make([]string, 0, strings.Count(s, "\n"))
-	scanner := bufio.NewScanner(strings.NewReader(s))
+func NewListFromLines(r io.Reader) List {
+	var words []string
+	scanner := bufio.NewScanner(r)
 
 	for scanner.Scan() {
 		word := scanner.Text()
 		word = strings.TrimSpace(word)
 		word = strings.ToUpper(word)
-		words = append(words, word)
+		if word != "" {
+			words = append(words, word)
+		}
 	}
 
 	return newList(words)

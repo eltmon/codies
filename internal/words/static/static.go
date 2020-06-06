@@ -1,11 +1,22 @@
 package static
 
-import "github.com/zikaeroh/codies/internal/words"
-
-//go:generate go run github.com/mjibson/esc -o=esc.go -pkg=static -ignore=^(static|esc)\.go$ -modtime=0 -private .
+import (
+	"github.com/zikaeroh/codies/internal/pkger"
+	"github.com/zikaeroh/codies/internal/words"
+)
 
 var (
-	Default    = words.NewListFromLines(_escFSMustString(false, "/codenames/default.txt"))
-	Duet       = words.NewListFromLines(_escFSMustString(false, "/codenames/duet.txt"))
-	Undercover = words.NewListFromLines(_escFSMustString(false, "/codenames/undercover.txt"))
+	Default    = load("/default.txt")
+	Duet       = load("/duet.txt")
+	Undercover = load("/undercover.txt")
 )
+
+func load(filename string) words.List {
+	f, err := pkger.Dir("/internal/words/static/codenames").Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	return words.NewListFromLines(f)
+}

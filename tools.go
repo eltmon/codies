@@ -4,5 +4,5 @@ package tools
 
 import (
 	_ "github.com/mailru/easyjson/easyjson"
-	_ "github.com/mjibson/esc"
+	_ "github.com/markbates/pkger/cmd/pkger"
 )
