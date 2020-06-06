@@ -43,6 +43,7 @@ jobs:
       - name: Run pkger
         if: ${{ matrix.pkger }}
         run: |
+          mkdir frontend/build # Ensure this exists; the tests won't use it.
           go run github.com/markbates/pkger/cmd/pkger list
           go run github.com/markbates/pkger/cmd/pkger -o internal/pkger
 
