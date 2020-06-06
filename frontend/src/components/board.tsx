@@ -1,5 +1,5 @@
 import { Button, createStyles, makeStyles, Theme, Typography } from '@material-ui/core';
-import { grey, orange, red } from '@material-ui/core/colors';
+import { brown, grey, orange, red } from '@material-ui/core/colors';
 import { Fireworks } from 'fireworks/lib/react';
 import * as React from 'react';
 import isEqual from 'react-fast-compare';
@@ -12,7 +12,7 @@ import { AspectDiv } from './aspectDiv';
 function neutralStyle(revealed: boolean, spymaster: boolean): React.CSSProperties {
     return {
         color: revealed ? 'white' : 'black',
-        backgroundColor: grey[revealed ? 500 : 200],
+        backgroundColor: revealed ? brown[200] : grey[200],
         fontWeight: spymaster ? 'bold' : undefined,
     };
 }
