@@ -19,7 +19,7 @@
         "clipboard-copy": "^3.1.0",
         "fireworks": "^2.2.5",
         "lodash": "^4.17.15",
-        "material-ui-dropzone": "3.0.0",
+        "material-ui-dropzone": "^3.2.1",
         "myzod": "^1.0.2",
         "prop-types": "^15.7.2",
         "react": "^16.13.1",
