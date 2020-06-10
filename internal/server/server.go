@@ -306,13 +306,19 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 	_ = g.Wait()
 }
 
+var errMissingPlayer = errors.New("missing player during handleNote")
+
 func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	// The client's version was wrong; reject and send them the current state.
 	if note.Version != r.room.Version {
-		r.sendOne(playerID, r.players[playerID])
+		p := r.players[playerID]
+		if p == nil {
+			return errMissingPlayer
+		}
+		r.sendOne(playerID, p)
 		return nil
 	}
 
@@ -655,5 +661,4 @@ func (r *Room) changeHideBomb(HideBomb bool) {
 
 	r.hideBomb = HideBomb
 	r.room.Version++
-	r.sendAll()
 }
