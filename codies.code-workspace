@@ -36,8 +36,7 @@
             "source.fixAll.eslint": true
         },
         "files.exclude": {
-            "**/node_modules": true,
-            "frontend": true
+            "**/node_modules": true
         },
         "typescript.tsdk": "frontend/node_modules/typescript/lib"
     }
