@@ -33,4 +33,11 @@ var (
 		Name:      "sent_total",
 		Help:      "Total number of sent messages.",
 	})
+
+	metricHandleErrors = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "codies",
+		Subsystem: "codies",
+		Name:      "handle_error_total",
+		Help:      "Total number of handle errors.",
+	})
 )

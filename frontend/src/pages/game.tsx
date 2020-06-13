@@ -56,7 +56,7 @@ function usePlayer(playerID: string, state?: State): { pState: StatePlayer; pTea
     }, [playerID, state]);
 }
 
-const reconnectAttempts = 5;
+const reconnectAttempts = 2;
 
 function useWS(roomID: string, playerID: string, nickname: string, dead: () => void, onOpen: () => void) {
     const didUnmount = React.useRef(false);

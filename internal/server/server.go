@@ -297,6 +297,7 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 			metricReceived.Inc()
 
 			if err := r.handleNote(playerID, &note); err != nil {
+				metricHandleErrors.Inc()
 				log.Println("error handling note:", err)
 				return err
 			}
