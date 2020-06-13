@@ -267,6 +267,11 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 	}()
 
 	g.Go(func() error {
+		<-ctx.Done()
+		return c.Close(websocket.StatusGoingAway, "going away")
+	})
+
+	g.Go(func() error {
 		ticker := time.NewTicker(time.Minute)
 		defer ticker.Stop()
 
