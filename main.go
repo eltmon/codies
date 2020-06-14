@@ -21,6 +21,8 @@ import (
 	"github.com/zikaeroh/codies/internal/responder"
 	"github.com/zikaeroh/codies/internal/server"
 	"github.com/zikaeroh/codies/internal/version"
+	"github.com/zikaeroh/ctxlog"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"nhooyr.io/websocket"
 )
@@ -38,7 +40,6 @@ var wsOpts *websocket.AcceptOptions
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	if _, err := flags.Parse(&args); err != nil {
 		// Default flag parser prints messages, so just exit.
@@ -51,7 +52,13 @@ func main() {
 		log.Fatal("must specify either --prod or --debug")
 	}
 
-	log.Printf("starting codies server, version %s", version.Version())
+	ctx := ctxutil.Interrupt()
+
+	logger := ctxlog.New(args.Debug)
+	defer zap.RedirectStdLog(logger)()
+	ctx = ctxlog.WithLogger(ctx, logger)
+
+	ctxlog.Info(ctx, "starting", zap.String("version", version.Version()))
 
 	wsOpts = &websocket.AcceptOptions{
 		OriginPatterns:  args.Origins,
@@ -59,15 +66,15 @@ func main() {
 	}
 
 	if args.Debug {
-		log.Println("starting in debug mode, allowing any WebSocket origin host")
+		ctxlog.Info(ctx, "starting in debug mode, allowing any WebSocket origin host")
 		wsOpts.InsecureSkipVerify = true
 	} else {
 		if !version.VersionSet() {
-			log.Fatal("running production build without version set")
+			ctxlog.Fatal(ctx, "running production build without version set")
 		}
 	}
 
-	g, ctx := errgroup.WithContext(ctxutil.Interrupt())
+	g, ctx := errgroup.WithContext(ctx)
 
 	srv := server.NewServer()
 
@@ -141,7 +148,7 @@ func main() {
 				var room *server.Room
 				if req.Create {
 					var err error
-					room, err = srv.CreateRoom(req.RoomName, req.RoomPass)
+					room, err = srv.CreateRoom(ctx, req.RoomName, req.RoomPass)
 					if err != nil {
 						switch err {
 						case server.ErrRoomExists:
@@ -227,7 +234,8 @@ func main() {
 		runServer(ctx, g, ":2112", prometheusHandler())
 	}
 
-	log.Fatal(g.Wait())
+	exitErr := g.Wait()
+	ctxlog.Fatal(ctx, "exited", zap.Error(exitErr))
 }
 
 func staticHandler() http.Handler {

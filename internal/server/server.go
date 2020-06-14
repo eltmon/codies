@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"sync"
 	"time"
 
@@ -13,7 +12,9 @@ import (
 	"github.com/zikaeroh/codies/internal/game"
 	"github.com/zikaeroh/codies/internal/protocol"
 	"github.com/zikaeroh/ctxjoin"
+	"github.com/zikaeroh/ctxlog"
 	"go.uber.org/atomic"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
@@ -73,10 +74,10 @@ func (s *Server) Run(ctx context.Context) error {
 			return ctx.Err()
 
 		case <-s.doPrune:
-			s.prune()
+			s.prune(ctx)
 
 		case <-ticker.C:
-			s.prune()
+			s.prune(ctx)
 		}
 	}
 }
@@ -97,7 +98,7 @@ func (s *Server) FindRoomByID(id string) *Room {
 	return s.roomIDs[id]
 }
 
-func (s *Server) CreateRoom(name, password string) (*Room, error) {
+func (s *Server) CreateRoom(ctx context.Context, name, password string) (*Room, error) {
 	<-s.ready
 
 	s.mu.Lock()
@@ -118,7 +119,7 @@ func (s *Server) CreateRoom(name, password string) (*Room, error) {
 	}
 	s.nextID++
 
-	ctx, cancel := context.WithCancel(s.ctx)
+	roomCtx, roomCancel := context.WithCancel(s.ctx)
 
 	room = &Room{
 		Name:        name,
@@ -126,8 +127,8 @@ func (s *Server) CreateRoom(name, password string) (*Room, error) {
 		ID:          id,
 		clientCount: &s.clientCount,
 		roomCount:   &s.roomCount,
-		ctx:         ctx,
-		cancel:      cancel,
+		ctx:         roomCtx,
+		cancel:      roomCancel,
 		room:        game.NewRoom(nil),
 		players:     make(map[game.PlayerID]noteSender),
 		turnSeconds: 60,
@@ -142,7 +143,7 @@ func (s *Server) CreateRoom(name, password string) (*Room, error) {
 	s.roomCount.Inc()
 	metricRooms.Inc()
 
-	log.Printf("created new room '%s' (%s)", name, room.ID)
+	ctxlog.Info(ctx, "created new room", zap.String("name", name), zap.String("id", room.ID))
 
 	if s.nextID%100 == 0 {
 		s.triggerPrune()
@@ -158,7 +159,7 @@ func (s *Server) triggerPrune() {
 	}
 }
 
-func (s *Server) prune() {
+func (s *Server) prune(ctx context.Context) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -188,7 +189,7 @@ func (s *Server) prune() {
 		metricRooms.Dec()
 	}
 
-	log.Printf("pruned %d rooms", len(toRemove))
+	ctxlog.Info(ctx, "pruned rooms", zap.Int("count", len(toRemove)))
 }
 
 func (s *Server) Stats() (rooms, clients int) {
@@ -227,18 +228,21 @@ func (r *Room) HandleConn(ctx context.Context, playerID uuid.UUID, nickname stri
 	ctx, cancel := ctxjoin.AddCancel(ctx, r.ctx)
 	defer cancel()
 
+	ctx = ctxlog.With(ctx, zap.String("roomName", r.Name), zap.String("roomID", r.ID), zap.String("nickname", nickname))
+
 	metricClients.Inc()
 	defer metricClients.Dec()
 
 	clientCount := r.clientCount.Inc()
-	log.Printf("client connected to room '%s' (%s); %v clients currently connected to %v rooms", r.Name, r.ID, clientCount, r.roomCount.Load())
+	ctxlog.Info(ctx, "client connected", zap.Int64("clientCount", clientCount), zap.Int64("roomCount", r.roomCount.Load()))
 
 	defer func() {
 		clientCount := r.clientCount.Dec()
-		log.Printf("client disconnected from room '%s' (%s); %v clients currently connected to %v rooms", r.Name, r.ID, clientCount, r.roomCount.Load())
+		ctxlog.Info(ctx, "client disconnected", zap.Int64("clientCount", clientCount), zap.Int64("roomCount", r.roomCount.Load()))
 	}()
 
 	defer c.Close(websocket.StatusGoingAway, "going away")
+
 	g, ctx := errgroup.WithContext(ctx)
 
 	r.mu.Lock()
@@ -302,12 +306,14 @@ func (r *Room) HandleConn(ctx context.Context, playerID uuid.UUID, nickname stri
 				return err
 			}
 
+			ctx = ctxlog.With(ctx, zap.String("method", string(note.Method)))
+
 			r.lastSeen.Store(time.Now())
 			metricReceived.Inc()
 
-			if err := r.handleNote(playerID, &note); err != nil {
+			if err := r.handleNote(ctx, playerID, &note); err != nil {
 				metricHandleErrors.Inc()
-				log.Println("error handling note:", err)
+				ctxlog.Error(ctx, "error handling note", zap.Error(err))
 				return err
 			}
 		}
@@ -318,7 +324,7 @@ func (r *Room) HandleConn(ctx context.Context, playerID uuid.UUID, nickname stri
 
 var errMissingPlayer = errors.New("missing player during handleNote")
 
-func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) error {
+func (r *Room) handleNote(ctx context.Context, playerID game.PlayerID, note *protocol.ClientNote) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -452,7 +458,7 @@ func (r *Room) handleNote(playerID game.PlayerID, note *protocol.ClientNote) err
 		r.changeHideBomb(params.HideBomb)
 
 	default:
-		log.Printf("unhandled method: %s", note.Method)
+		ctxlog.Warn(ctx, "unhandled method")
 	}
 
 	return nil
