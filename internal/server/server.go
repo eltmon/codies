@@ -245,39 +245,26 @@ func (r *Room) HandleConn(ctx context.Context, playerID uuid.UUID, nickname stri
 
 	g, ctx := errgroup.WithContext(ctx)
 
-	setup := func() (success bool) {
-		r.mu.Lock()
-		defer r.mu.Unlock()
-
-		if _, ok := r.players[playerID]; ok {
-			ctxlog.Warn(ctx, "client with this ID already exists")
-			return false
+	r.mu.Lock()
+	r.players[playerID] = func(s protocol.ServerNote) {
+		if ctx.Err() != nil {
+			return
 		}
 
-		r.players[playerID] = func(s protocol.ServerNote) {
-			if ctx.Err() != nil {
+		// It's not safe to start more group goroutines concurrently; just use a regular
+		// goroutine and hope that errors here will be reflected later via ping/receive failures.
+		go func() {
+			ctx, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+			if err := wsjson.Write(ctx, c, &s); err != nil {
 				return
 			}
-
-			// It's not safe to start more group goroutines concurrently; just use a regular
-			// goroutine and hope that errors here will be reflected later via ping/receive failures.
-			go func() {
-				ctx, cancel := context.WithTimeout(ctx, time.Second)
-				defer cancel()
-				if err := wsjson.Write(ctx, c, &s); err != nil {
-					return
-				}
-				metricSent.Inc()
-			}()
-		}
-		r.room.AddPlayer(playerID, nickname)
-		r.sendAll()
-		return true
+			metricSent.Inc()
+		}()
 	}
-
-	if !setup() {
-		return
-	}
+	r.room.AddPlayer(playerID, nickname)
+	r.sendAll()
+	r.mu.Unlock()
 
 	defer func() {
 		r.mu.Lock()
