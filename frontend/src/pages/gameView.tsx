@@ -41,7 +41,7 @@ import { isDefined, nameofFactory, noComplete } from '../common';
 import { Board } from '../components/board';
 import { ClipboardButton } from '../components/clipboard';
 import { useServerTime } from '../hooks';
-import { State, StatePlayer, StateTeams, StateTimer, StateWordList, WordPack } from '../protocol';
+import { RoomState, StatePlayer, StateTeams, StateTimer, StateWordList, WordPack } from '../protocol';
 import { teamSpecs } from '../teams';
 
 export interface Sender {
@@ -754,7 +754,7 @@ export interface GameViewProps {
     roomID: string;
     leave: () => void;
     send: Sender;
-    state: State;
+    state: RoomState;
     pState: StatePlayer;
     pTeam: number;
 }

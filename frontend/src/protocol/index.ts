@@ -131,8 +131,8 @@ const StateWordList = myzod.object({
     enabled: myzod.boolean(),
 });
 
-export type State = DeepReadonly<Infer<typeof State>>;
-export const State = myzod.object({
+export type RoomState = DeepReadonly<Infer<typeof RoomState>>;
+export const RoomState = myzod.object({
     version: myzod.number(),
     teams: StateTeams,
     turn: myzod.number(),
@@ -142,6 +142,12 @@ export const State = myzod.object({
     lists: myzod.array(StateWordList),
     timer: StateTimer.optional().nullable(),
     hideBomb: myzod.boolean(),
+});
+
+export type State = DeepReadonly<Infer<typeof State>>;
+export const State = myzod.object({
+    playerID: myzod.string(),
+    roomState: RoomState,
 });
 
 export type ServerNote = DeepReadonly<Infer<typeof ServerNote>>;

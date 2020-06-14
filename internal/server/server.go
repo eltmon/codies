@@ -224,7 +224,9 @@ type Room struct {
 
 type noteSender func(protocol.ServerNote)
 
-func (r *Room) HandleConn(ctx context.Context, playerID uuid.UUID, nickname string, c *websocket.Conn) {
+func (r *Room) HandleConn(ctx context.Context, nickname string, c *websocket.Conn) {
+	playerID := uuid.Must(uuid.NewV4())
+
 	ctx, cancel := ctxjoin.AddCancel(ctx, r.ctx)
 	defer cancel()
 
@@ -474,12 +476,12 @@ func (r *Room) sendAll() {
 // Must be called with r.mu locked.
 func (r *Room) sendOne(playerID game.PlayerID, sender noteSender) {
 	state := r.createStateFor(playerID)
-	note := protocol.StateNote(state)
+	note := protocol.NewStateNote(playerID, state)
 	sender(note)
 }
 
 // Must be called with r.mu locked.
-func (r *Room) createStateFor(playerID game.PlayerID) *protocol.State {
+func (r *Room) createStateFor(playerID game.PlayerID) *protocol.RoomState {
 	if r.state == nil || r.state.version != r.room.Version {
 		r.state = r.createStateCache()
 	}
@@ -498,8 +500,8 @@ func (r *Room) createStateFor(playerID game.PlayerID) *protocol.State {
 
 type stateCache struct {
 	version   int
-	guesser   *protocol.State
-	spymaster *protocol.State
+	guesser   *protocol.RoomState
+	spymaster *protocol.RoomState
 }
 
 func (r *Room) createStateCache() *stateCache {
@@ -510,10 +512,10 @@ func (r *Room) createStateCache() *stateCache {
 	}
 }
 
-func (r *Room) createRoomState(spymaster bool) *protocol.State {
+func (r *Room) createRoomState(spymaster bool) *protocol.RoomState {
 	room := r.room
 
-	s := &protocol.State{
+	s := &protocol.RoomState{
 		Version:   room.Version,
 		Teams:     make([][]*protocol.StatePlayer, len(room.Teams)),
 		Turn:      room.Turn,

@@ -4,7 +4,7 @@ import useWebSocket from 'react-use-websocket';
 import { DeepReadonly } from 'ts-essentials';
 
 import { assertIsDefined, assertNever, noop, reloadOutdatedPage, websocketUrl } from '../common';
-import { useServerTime, useStableUUID } from '../hooks';
+import { useServerTime } from '../hooks';
 import { version as codiesVersion } from '../metadata.json';
 import { ClientNote, PartialClientNote, ServerNote, State, StatePlayer, TimeResponse, WordPack } from '../protocol';
 import { GameView, Sender } from './gameView';
@@ -39,26 +39,26 @@ function useSender(dispatch: (action: PartialClientNote) => void): Sender {
     }, [dispatch]);
 }
 
-function usePlayer(playerID: string, state?: State): { pState: StatePlayer; pTeam: number } | undefined {
+function usePlayer(state?: State): { pState: StatePlayer; pTeam: number } | undefined {
     return React.useMemo(() => {
         if (!state) {
             return undefined;
         }
 
-        for (let i = 0; i < state.teams.length; i++) {
-            const pState = state.teams[i].find((p) => p.playerID === playerID);
+        for (let i = 0; i < state.roomState.teams.length; i++) {
+            const pState = state.roomState.teams[i].find((p) => p.playerID === state.playerID);
             if (pState) {
                 return { pState, pTeam: i };
             }
         }
 
         fail('Player not found in any team');
-    }, [playerID, state]);
+    }, [state]);
 }
 
 const reconnectAttempts = 2;
 
-function useWS(roomID: string, playerID: string, nickname: string, dead: () => void, onOpen: () => void) {
+function useWS(roomID: string, nickname: string, dead: () => void, onOpen: () => void) {
     const didUnmount = React.useRef(false);
     const retry = React.useRef(0);
 
@@ -68,7 +68,7 @@ function useWS(roomID: string, playerID: string, nickname: string, dead: () => v
         //
         // X-CODIES-VERSION would be cleaner, but the WS hook doesn't
         // support anything but query params.
-        queryParams: { roomID: roomID, playerID: playerID, nickname: nickname, codiesVersion: codiesVersion },
+        queryParams: { roomID: roomID, nickname: nickname, codiesVersion: codiesVersion },
         reconnectAttempts,
         onMessage: () => {
             retry.current = 0;
@@ -161,7 +161,7 @@ function useStateReducer(sendNote: (r: ClientNote) => void) {
                 case 'setState':
                     return action.state;
                 default:
-                    sendNoteRef.current({ ...action, version: state.version });
+                    sendNoteRef.current({ ...action, version: state.roomState.version });
                     return state;
             }
         },
@@ -176,15 +176,14 @@ export interface GameProps {
 }
 
 export const Game = (props: DeepReadonly<GameProps>) => {
-    const playerID = useStableUUID();
     const nickname = React.useRef(props.nickname); // Preserve a nickname for use in reconnects.
 
     const syncTime = useSyncedServerTime();
-    const { sendJsonMessage, lastJsonMessage } = useWS(props.roomID, playerID, nickname.current, props.leave, syncTime);
+    const { sendJsonMessage, lastJsonMessage } = useWS(props.roomID, nickname.current, props.leave, syncTime);
 
     const reducer = useStateReducer(sendJsonMessage);
     const [state, dispatch] = React.useReducer(reducer, undefined);
-    const player = usePlayer(playerID, state);
+    const player = usePlayer(state);
     const send = useSender(dispatch);
 
     React.useEffect(() => {
@@ -215,7 +214,7 @@ export const Game = (props: DeepReadonly<GameProps>) => {
             roomID={props.roomID}
             leave={props.leave}
             send={send}
-            state={state}
+            state={state.roomState}
             pState={player.pState}
             pTeam={player.pTeam}
         />

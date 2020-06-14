@@ -3,7 +3,6 @@ package protocol
 import (
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/mailru/easyjson"
 	"github.com/zikaeroh/codies/internal/game"
 )
@@ -57,18 +56,13 @@ type StatsResponse struct {
 }
 
 type WSQuery struct {
-	RoomID   string    `queryparam:"roomID"`
-	PlayerID uuid.UUID `queryparam:"playerID"`
-	Nickname string    `queryparam:"nickname"`
+	RoomID   string `queryparam:"roomID"`
+	Nickname string `queryparam:"nickname"`
 }
 
 func (w *WSQuery) Valid() (msg string, valid bool) {
 	if w.RoomID == "" {
 		return "Room ID cannot be empty.", false
-	}
-
-	if w.PlayerID == uuid.Nil {
-		return "Player ID cannot be empty", false
 	}
 
 	if len(w.Nickname) == 0 {
@@ -189,15 +183,24 @@ type ChangeHideBombParams struct {
 	HideBomb bool `json:"hideBomb"`
 }
 
-func StateNote(s *State) ServerNote {
+func NewStateNote(playerID game.PlayerID, s *RoomState) ServerNote {
 	return ServerNote{
 		Method: "state",
-		Params: s,
+		Params: &State{
+			PlayerID:  playerID,
+			RoomState: s,
+		},
 	}
 }
 
 //easyjson:json
 type State struct {
+	PlayerID  game.PlayerID `json:"playerID"`
+	RoomState *RoomState    `json:"roomState"`
+}
+
+//easyjson:json
+type RoomState struct {
 	Version   int              `json:"version"`
 	Teams     [][]*StatePlayer `json:"teams"`
 	Turn      game.Team        `json:"turn"`
