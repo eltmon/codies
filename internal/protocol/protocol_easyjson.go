@@ -537,9 +537,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol6(in *jlexer.L
 		}
 		switch key {
 		case "playerID":
-			if data := in.UnsafeBytes(); in.Ok() {
-				in.AddError((out.PlayerID).UnmarshalText(data))
-			}
+			out.PlayerID = string(in.String())
 		case "nickname":
 			out.Nickname = string(in.String())
 		case "spymaster":
@@ -565,7 +563,7 @@ func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol6(out *jwriter
 	{
 		const prefix string = ",\"playerID\":"
 		out.RawString(prefix[1:])
-		out.RawText((in.PlayerID).MarshalText())
+		out.String(string(in.PlayerID))
 	}
 	{
 		const prefix string = ",\"nickname\":"
@@ -623,9 +621,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol7(in *jlexer.L
 		}
 		switch key {
 		case "playerID":
-			if data := in.UnsafeBytes(); in.Ok() {
-				in.AddError((out.PlayerID).UnmarshalText(data))
-			}
+			out.PlayerID = string(in.String())
 		case "roomState":
 			if in.IsNull() {
 				in.Skip()
@@ -657,7 +653,7 @@ func easyjsonE4425964EncodeGithubComZikaerohCodiesInternalProtocol7(out *jwriter
 	{
 		const prefix string = ",\"playerID\":"
 		out.RawString(prefix[1:])
-		out.RawText((in.PlayerID).MarshalText())
+		out.String(string(in.PlayerID))
 	}
 	{
 		const prefix string = ",\"roomState\":"

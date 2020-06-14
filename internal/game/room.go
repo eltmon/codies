@@ -1,12 +1,11 @@
 package game
 
 import (
-	"github.com/gofrs/uuid"
 	"github.com/zikaeroh/codies/internal/words"
 	"github.com/zikaeroh/codies/internal/words/static"
 )
 
-type PlayerID = uuid.UUID
+type PlayerID = string
 
 type WordList struct {
 	Name   string

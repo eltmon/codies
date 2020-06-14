@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/speps/go-hashids"
 	"github.com/zikaeroh/codies/internal/game"
 	"github.com/zikaeroh/codies/internal/protocol"
+	"github.com/zikaeroh/codies/internal/uid"
 	"github.com/zikaeroh/ctxjoin"
 	"github.com/zikaeroh/ctxlog"
 	"go.uber.org/atomic"
@@ -33,32 +33,28 @@ type Server struct {
 	doPrune     chan struct{}
 	ready       chan struct{}
 
-	mu sync.Mutex
+	genRoomID *uid.Generator
 
-	ctx     context.Context
+	ctx context.Context
+
+	mu      sync.Mutex
 	rooms   map[string]*Room
 	roomIDs map[string]*Room
-
-	hid    *hashids.HashID
-	nextID int64
 }
 
 func NewServer() *Server {
-	hd := hashids.NewData()
-	hd.MinLength = 8
-	hd.Salt = uuid.Must(uuid.NewV4()).String() // IDs are only valid for this server instance; ok to randomize salt.
-	hid, err := hashids.NewWithData(hd)
-	if err != nil {
-		panic(err)
-	}
-
 	return &Server{
-		ready:   make(chan struct{}),
-		doPrune: make(chan struct{}, 1),
-		rooms:   make(map[string]*Room),
-		roomIDs: make(map[string]*Room),
-		hid:     hid,
+		ready:     make(chan struct{}),
+		doPrune:   make(chan struct{}, 1),
+		genRoomID: uid.NewGenerator(salt()), // IDs are only valid for this server instance; ok to randomize salt.
+		rooms:     make(map[string]*Room),
+		roomIDs:   make(map[string]*Room),
 	}
+}
+
+func salt() string {
+	x := time.Now().Unix()
+	return strconv.FormatInt(x, 10)
 }
 
 func (s *Server) Run(ctx context.Context) error {
@@ -113,11 +109,7 @@ func (s *Server) CreateRoom(ctx context.Context, name, password string) (*Room, 
 		return nil, ErrTooManyRooms
 	}
 
-	id, err := s.hid.EncodeInt64([]int64{s.nextID})
-	if err != nil {
-		return nil, err
-	}
-	s.nextID++
+	id, idRaw := s.genRoomID.Next()
 
 	roomCtx, roomCancel := context.WithCancel(s.ctx)
 
@@ -127,6 +119,7 @@ func (s *Server) CreateRoom(ctx context.Context, name, password string) (*Room, 
 		ID:          id,
 		clientCount: &s.clientCount,
 		roomCount:   &s.roomCount,
+		genPlayerID: uid.NewGenerator(id),
 		ctx:         roomCtx,
 		cancel:      roomCancel,
 		room:        game.NewRoom(nil),
@@ -143,9 +136,9 @@ func (s *Server) CreateRoom(ctx context.Context, name, password string) (*Room, 
 	s.roomCount.Inc()
 	metricRooms.Inc()
 
-	ctxlog.Info(ctx, "created new room", zap.String("name", name), zap.String("id", room.ID))
+	ctxlog.Info(ctx, "created new room", zap.String("roomName", name), zap.String("roomID", room.ID))
 
-	if s.nextID%100 == 0 {
+	if idRaw%100 == 0 {
 		s.triggerPrune()
 	}
 
@@ -207,6 +200,7 @@ type Room struct {
 	cancel      context.CancelFunc
 	clientCount *atomic.Int64
 	roomCount   *atomic.Int64
+	genPlayerID *uid.Generator
 
 	mu       sync.Mutex
 	room     *game.Room
@@ -225,12 +219,12 @@ type Room struct {
 type noteSender func(protocol.ServerNote)
 
 func (r *Room) HandleConn(ctx context.Context, nickname string, c *websocket.Conn) {
-	playerID := uuid.Must(uuid.NewV4())
+	playerID, _ := r.genPlayerID.Next()
 
 	ctx, cancel := ctxjoin.AddCancel(ctx, r.ctx)
 	defer cancel()
 
-	ctx = ctxlog.With(ctx, zap.String("roomName", r.Name), zap.String("roomID", r.ID), zap.String("nickname", nickname))
+	ctx = ctxlog.With(ctx, zap.String("roomName", r.Name), zap.String("roomID", r.ID), zap.String("playerID", playerID), zap.String("nickname", nickname))
 
 	metricClients.Inc()
 	defer metricClients.Dec()
