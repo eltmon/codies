@@ -210,7 +210,7 @@ func main() {
 				}
 
 				g.Go(func() error {
-					room.HandleConn(query.PlayerID, query.Nickname, c)
+					room.HandleConn(ctx, query.PlayerID, query.Nickname, c)
 					return nil
 				})
 			})

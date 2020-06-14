@@ -12,6 +12,7 @@ import (
 	"github.com/speps/go-hashids"
 	"github.com/zikaeroh/codies/internal/game"
 	"github.com/zikaeroh/codies/internal/protocol"
+	"github.com/zikaeroh/ctxjoin"
 	"go.uber.org/atomic"
 	"golang.org/x/sync/errgroup"
 	"nhooyr.io/websocket"
@@ -222,7 +223,10 @@ type Room struct {
 
 type noteSender func(protocol.ServerNote)
 
-func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn) {
+func (r *Room) HandleConn(ctx context.Context, playerID uuid.UUID, nickname string, c *websocket.Conn) {
+	ctx, cancel := ctxjoin.AddCancel(ctx, r.ctx)
+	defer cancel()
+
 	metricClients.Inc()
 	defer metricClients.Dec()
 
@@ -235,7 +239,7 @@ func (r *Room) HandleConn(playerID uuid.UUID, nickname string, c *websocket.Conn
 	}()
 
 	defer c.Close(websocket.StatusGoingAway, "going away")
-	g, ctx := errgroup.WithContext(r.ctx)
+	g, ctx := errgroup.WithContext(ctx)
 
 	r.mu.Lock()
 	r.players[playerID] = func(s protocol.ServerNote) {
