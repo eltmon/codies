@@ -77,9 +77,10 @@ interface CenterTextProps {
     winner: number | undefined | null;
     timer: StateTimer | undefined | null;
     turn: number;
+    myTurn: boolean;
 }
 
-const CenterText = ({ winner, timer, turn }: DeepReadonly<CenterTextProps>) => {
+const CenterText = ({ winner, timer, turn, myTurn }: DeepReadonly<CenterTextProps>) => {
     const classes = useCenterStyles();
     const [countdown, setCountdown] = React.useState<number | undefined>();
     const { now } = useServerTime();
@@ -122,14 +123,18 @@ const CenterText = ({ winner, timer, turn }: DeepReadonly<CenterTextProps>) => {
     }, [countdown, winner, deadline, now]);
 
     const centerText = React.useMemo(() => {
-        const text = isDefined(winner) ? `${teamSpecs[winner].name} wins!` : `${teamSpecs[turn].name}'s turn`;
+        const text = isDefined(winner)
+            ? `${teamSpecs[winner].name} wins!`
+            : myTurn
+            ? 'Your turn'
+            : `${teamSpecs[turn].name}'s turn`;
 
         if (!isDefined(countdown) || isDefined(winner)) {
             return text;
         }
 
         return `${text} [${countdown}s]`;
-    }, [winner, turn, countdown]);
+    }, [winner, turn, myTurn, countdown]);
 
     return (
         <h1
@@ -182,7 +187,7 @@ const Header = React.memo(function Header({
                 </h1>
             </Grid>
             <Grid item xs style={{ textAlign: 'center' }}>
-                <CenterText winner={winner} timer={timer} turn={turn} />
+                <CenterText winner={winner} timer={timer} turn={turn} myTurn={myTurn} />
             </Grid>
             <Grid item xs style={{ textAlign: 'right' }}>
                 <Button
