@@ -302,7 +302,7 @@ func (r *Room) HandleConn(ctx context.Context, nickname string, c *websocket.Con
 				return err
 			}
 
-			ctx = ctxlog.With(ctx, zap.String("method", string(note.Method)))
+			ctx := ctxlog.With(ctx, zap.String("method", string(note.Method)))
 
 			r.lastSeen.Store(time.Now())
 			metricReceived.Inc()
