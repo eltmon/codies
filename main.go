@@ -39,6 +39,11 @@ var args = struct {
 var wsOpts *websocket.AcceptOptions
 
 func main() {
+	if argv := os.Args[1:]; len(argv) > 0 && argv[0] == "version" {
+		fmt.Println(version.Version())
+		return
+	}
+
 	rand.Seed(time.Now().Unix())
 
 	if _, err := flags.Parse(&args); err != nil {

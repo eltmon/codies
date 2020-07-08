@@ -35,3 +35,6 @@ FROM gcr.io/distroless/base:nonroot
 COPY --from=GO_BUILD /codies/codies /codies
 ENTRYPOINT [ "/codies", "--prod" ]
 EXPOSE 5000
+
+# Verify that the binary works.
+RUN [ "/codies", "version" ]
