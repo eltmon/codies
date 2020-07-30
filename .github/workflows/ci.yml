@@ -10,7 +10,7 @@ on:
 
 env:
   GO_DEV_VERSION: "1.14" # Recommended Go version for development.
-  GOLANGCI_LINT_VERSION: "v1.26.0"
+  GOLANGCI_LINT_VERSION: "v1.29.0"
   NODE_VERSION: "14"
 
 jobs:
@@ -114,7 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2-beta
         with:
           node-version: ${{ env.NODE_VERSION }}
 
