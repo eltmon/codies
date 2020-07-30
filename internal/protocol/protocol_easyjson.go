@@ -29,7 +29,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol(in *jlexer.Le
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -101,7 +101,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol1(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -178,7 +178,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol2(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -269,7 +269,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol3(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -353,7 +353,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol4(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -432,7 +432,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol5(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -528,7 +528,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol6(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -612,7 +612,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol7(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -701,7 +701,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol8(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -790,7 +790,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol9(in *jlexer.L
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1168,7 +1168,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol10(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1267,7 +1267,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol11(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1351,7 +1351,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol12(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1428,7 +1428,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol13(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1498,7 +1498,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol14(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1561,7 +1561,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol15(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1624,7 +1624,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol16(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1687,7 +1687,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol17(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1696,7 +1696,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol17(in *jlexer.
 		}
 		switch key {
 		case "method":
-			out.Method = ClientMethod(in.String())
+			out.Method = ClientMethod(in.StringIntern())
 		case "version":
 			out.Version = int(in.Int())
 		case "params":
@@ -1771,7 +1771,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol18(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1841,7 +1841,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol19(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1911,7 +1911,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol20(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -1981,7 +1981,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol21(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -2051,7 +2051,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol22(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -2128,7 +2128,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol23(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -2198,7 +2198,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol24(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -2268,7 +2268,7 @@ func easyjsonE4425964DecodeGithubComZikaerohCodiesInternalProtocol25(in *jlexer.
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -2382,7 +2382,7 @@ func easyjsonE4425964Decode(in *jlexer.Lexer, out *struct {
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()

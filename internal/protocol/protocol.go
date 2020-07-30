@@ -78,7 +78,7 @@ func (w *WSQuery) Valid() (msg string, valid bool) {
 
 //easyjson:json
 type ClientNote struct {
-	Method  ClientMethod        `json:"method"`
+	Method  ClientMethod        `json:"method,intern"` //nolint:staticcheck
 	Version int                 `json:"version"`
 	Params  easyjson.RawMessage `json:"params"`
 }
