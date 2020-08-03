@@ -320,6 +320,7 @@ func (r *Room) HandleConn(ctx context.Context, nickname string, c *websocket.Con
 
 var errMissingPlayer = errors.New("missing player during handleNote")
 
+//nolint:gocyclo
 func (r *Room) handleNote(ctx context.Context, playerID game.PlayerID, note *protocol.ClientNote) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -666,11 +667,11 @@ func (r *Room) startTimer() {
 }
 
 // Must be called with r.mu locked.
-func (r *Room) changeHideBomb(HideBomb bool) {
-	if r.hideBomb == HideBomb {
+func (r *Room) changeHideBomb(hideBomb bool) {
+	if r.hideBomb == hideBomb {
 		return
 	}
 
-	r.hideBomb = HideBomb
+	r.hideBomb = hideBomb
 	r.room.Version++
 }

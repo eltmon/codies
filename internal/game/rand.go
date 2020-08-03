@@ -12,7 +12,7 @@ type globalRand struct{}
 var _ Rand = globalRand{}
 
 func (globalRand) Intn(n int) int {
-	return rand.Intn(n)
+	return rand.Intn(n) //nolint:gosec
 }
 
 func (globalRand) Shuffle(n int, swap func(i, j int)) {

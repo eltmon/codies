@@ -73,10 +73,8 @@ func main() {
 	if args.Debug {
 		ctxlog.Info(ctx, "starting in debug mode, allowing any WebSocket origin host")
 		wsOpts.InsecureSkipVerify = true
-	} else {
-		if !version.VersionSet() {
-			ctxlog.Fatal(ctx, "running production build without version set")
-		}
+	} else if !version.IsSet() {
+		ctxlog.Fatal(ctx, "running production build without version set")
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -305,9 +303,7 @@ func runServer(ctx context.Context, g *errgroup.Group, addr string, handler http
 		return httpSrv.Shutdown(ctx)
 	})
 
-	g.Go(func() error {
-		return httpSrv.ListenAndServe()
-	})
+	g.Go(httpSrv.ListenAndServe)
 }
 
 func prometheusHandler() http.Handler {

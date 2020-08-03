@@ -11,7 +11,7 @@ func Version() string {
 	return version
 }
 
-// VersionSet returns true if the verison has been set.
-func VersionSet() bool {
+// IsSet returns true if the version has been set.
+func IsSet() bool {
 	return version != ""
 }

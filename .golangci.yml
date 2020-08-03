@@ -1,0 +1,40 @@
+linters-settings:
+  golint:
+    min-confidence: 0.0
+
+linters:
+  enable-all: true
+  disable:
+    # https://github.com/golangci/golangci-lint/issues/484
+    - govet
+    - maligned
+    - wsl
+    - gomnd
+    - lll
+    - godox
+    - gochecknoglobals
+    - gochecknoinits
+    - funlen
+    - gocognit
+    - goconst
+    - interfacer
+    - dogsled
+    - dupl
+    - unparam
+    - nestif
+    - testpackage
+    - goerr113
+    - nolintlint
+    - godot
+    - stylecheck
+    - unused
+    - gofumpt
+    - exhaustive # Breaks on enum values exported from test packages.
+    - nlreturn
+    - gci
+
+    # - staticcheck
+
+issues:
+  # exclude-use-default: false
+  max-per-linter: 0

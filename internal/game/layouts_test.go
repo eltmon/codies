@@ -19,7 +19,7 @@ func TestLayouts(t *testing.T) {
 		assert.Equal(t, sum, key.boardSize)
 
 		assert.Assert(t, sort.SliceIsSorted(layout.teams, func(i, j int) bool {
-			return layout.teams[i] >= layout.teams[j]
+			return layout.teams[i] >= layout.teams[j] //nolint:scopelint
 		}))
 	}
 }
