@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
-	github.com/mailru/easyjson v0.7.3
+	github.com/mailru/easyjson v0.7.4-0.20200812114229-8ab5ff9cd8e4
 	github.com/markbates/pkger v0.17.0
 	github.com/posener/ctxutil v1.0.0
 	github.com/prometheus/client_golang v1.7.1

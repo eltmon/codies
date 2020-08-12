@@ -16,7 +16,7 @@ ARG version
 RUN jq ".version = \"${version}\"" ./src/metadata.json | sponge ./src/metadata.json
 RUN yarn build
 
-FROM golang:1.14 as GO_BUILD
+FROM golang:1.15 as GO_BUILD
 WORKDIR /codies
 COPY ./go.mod ./go.sum ./
 RUN go mod download
