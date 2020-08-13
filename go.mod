@@ -6,7 +6,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
 	github.com/mailru/easyjson v0.7.4-0.20200812114229-8ab5ff9cd8e4
-	github.com/markbates/pkger v0.17.0
+	github.com/markbates/pkger v0.17.1-0.20200812175352-0273362499c7
 	github.com/posener/ctxutil v1.0.0
 	github.com/prometheus/client_golang v1.7.1
 	github.com/speps/go-hashids v2.0.0+incompatible
@@ -19,5 +19,3 @@ require (
 	gotest.tools/v3 v3.0.2
 	nhooyr.io/websocket v1.8.6
 )
-
-replace github.com/markbates/pkger => github.com/zikaeroh/pkger v0.17.1-0.20200604025301-dceb832975ba
