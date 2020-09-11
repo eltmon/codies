@@ -33,13 +33,13 @@ function useTheme() {
         })
     );
 
-    const toggleTheme = () => {
+    const toggleTheme = React.useMemo(() => {
         if (themeName === 'light') {
-            setThemeName('dark');
+            return () => setThemeName('dark');
         } else {
-            setThemeName('light');
+            return () => setThemeName('light');
         }
-    };
+    }, [themeName, setThemeName]);
 
     return { theme, toggleTheme, isDark: themeName === 'dark' };
 }
