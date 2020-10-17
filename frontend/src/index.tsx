@@ -1,4 +1,7 @@
-import 'typeface-roboto';
+import 'fontsource-roboto/300.css';
+import 'fontsource-roboto/400.css';
+import 'fontsource-roboto/500.css';
+import 'fontsource-roboto/700.css';
 
 import { createMuiTheme, CssBaseline, IconButton, responsiveFontSizes, ThemeProvider } from '@material-ui/core';
 import { Brightness4, Brightness7 } from '@material-ui/icons';

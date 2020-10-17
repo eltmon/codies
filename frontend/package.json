@@ -8,6 +8,7 @@
         "@rehooks/local-storage": "^2.4.0",
         "clipboard-copy": "^3.1.0",
         "fireworks": "^2.2.6",
+        "fontsource-roboto": "^3.0.3",
         "lodash": "^4.17.20",
         "material-ui-dropzone": "^3.5.0",
         "myzod": "^1.1.0",
@@ -17,8 +18,7 @@
         "react-fast-compare": "^3.2.0",
         "react-hook-form": "^6.9.2",
         "react-scripts": "^3.4.3",
-        "react-use-websocket": "^2.2.0",
-        "typeface-roboto": "^0.0.75"
+        "react-use-websocket": "^2.2.0"
     },
     "devDependencies": {
         "@testing-library/dom": "^7.24.5",
