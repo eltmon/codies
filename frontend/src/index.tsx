@@ -47,7 +47,7 @@ function useTheme() {
     return { theme, toggleTheme, isDark: themeName === 'dark' };
 }
 
-const Root = (_props: {}) => {
+const Root = () => {
     const { theme, toggleTheme, isDark } = useTheme();
 
     return (

@@ -328,5 +328,5 @@ const props = {
 };
 
 // Static game page for testing.
-export const StaticView = (_props: {}) =>
+export const StaticView = () =>
     process.env.NODE_ENV === 'development' ? GameView({ ...props, send, roomID: 'fakeRoomID', leave: noop }) : null;

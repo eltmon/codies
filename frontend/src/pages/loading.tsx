@@ -1,7 +1,7 @@
 import { Container, Grid } from '@material-ui/core';
 import * as React from 'react';
 
-export const Loading = (_props: {}) => {
+export const Loading = () => {
     return (
         <Container>
             <Grid

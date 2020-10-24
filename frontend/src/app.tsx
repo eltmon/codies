@@ -6,7 +6,7 @@ import { Game, GameProps } from './pages/game';
 import { Login } from './pages/login';
 import { StaticView } from './pages/staticView';
 
-export const App = (_props: {}) => {
+export const App = () => {
     const [gameProps, setGameProps] = React.useState<GameProps | undefined>();
     const leave = React.useCallback(() => setGameProps(undefined), []);
     const onLogin = React.useCallback((roomID, nickname) => setGameProps({ roomID, nickname, leave }), [leave]);
